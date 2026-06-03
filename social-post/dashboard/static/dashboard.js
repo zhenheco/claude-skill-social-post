@@ -24,10 +24,10 @@ function renderCharts() {
     xAxis: { type: 'category', data: rows.map((row) => `${row.platform}:${row.post_id}`) },
     yAxis: { type: 'value' },
     series: [
-      { name: 'reach', type: 'line', data: rows.map((row) => row.reach) },
-      { name: 'engagement', type: 'line', data: rows.map((row) => row.engagement) },
-      { name: 'conversion proxy', type: 'line', data: rows.map((row) => row.conversion_proxy) },
-      { name: 'per view', type: 'line', data: rows.map((row) => row.per_view) },
+      { name: '觸及', type: 'line', data: rows.map((row) => row.reach) },
+      { name: '互動', type: 'line', data: rows.map((row) => row.engagement) },
+      { name: '轉換代理', type: 'line', data: rows.map((row) => row.conversion_proxy) },
+      { name: '每次瀏覽', type: 'line', data: rows.map((row) => row.per_view) },
     ],
   });
 
@@ -51,14 +51,14 @@ function renderCharts() {
     xAxis: { type: 'category', data: (vm.calibration || []).map((row) => `${row.platform}:${row.bin}`) },
     yAxis: { type: 'value', max: 1 },
     series: [
-      { name: 'predicted', type: 'bar', data: (vm.calibration || []).map((row) => row.predicted) },
-      { name: 'observed', type: 'bar', data: (vm.calibration || []).map((row) => row.observed) },
+      { name: '預測', type: 'bar', data: (vm.calibration || []).map((row) => row.predicted) },
+      { name: '實際', type: 'bar', data: (vm.calibration || []).map((row) => row.observed) },
     ],
   });
 }
 
 function scorePill(name, score) {
-  return `<span class="pill">${name}: ${score?.value ?? 'absent'}</span>`;
+  return `<span class="pill">${name}: ${score?.value ?? '無資料'}</span>`;
 }
 
 function renderProposals() {
@@ -67,19 +67,19 @@ function renderProposals() {
   host.innerHTML = (vm.proposals || []).map((proposal) => `
     <article class="item">
       <div class="item-title">${proposal.platform} · ${proposal.kind} · ${proposal.id}</div>
-      <div class="meta">${proposal.hard_no_auto_apply ? 'HARD no-auto-apply · ' : ''}${proposal.hard_no_auto_apply_reason || 'conversion evidence present'}</div>
+      <div class="meta">${proposal.hard_no_auto_apply ? '強制禁止自動套用 · ' : ''}${proposal.hard_no_auto_apply_reason || '已有轉換證據'}</div>
       <div class="score-row">
-        ${scorePill('distribution', proposal.scores.distribution)}
-        ${scorePill('engagement quality', proposal.scores.engagement_quality)}
-        ${scorePill('conversion proxy', proposal.scores.conversion_proxy)}
+        ${scorePill('傳播', proposal.scores.distribution)}
+        ${scorePill('互動品質', proposal.scores.engagement_quality)}
+        ${scorePill('轉換代理', proposal.scores.conversion_proxy)}
       </div>
       <div class="actions">
-        <button data-decision="accept" data-category="${proposal.category}" data-id="${proposal.id}">Accept</button>
-        <button data-decision="reject" data-category="${proposal.category}" data-id="${proposal.id}">Reject</button>
-        <button data-decision="snooze" data-category="${proposal.category}" data-id="${proposal.id}">Snooze</button>
+        <button data-decision="accept" data-category="${proposal.category}" data-id="${proposal.id}">採用</button>
+        <button data-decision="reject" data-category="${proposal.category}" data-id="${proposal.id}">駁回</button>
+        <button data-decision="snooze" data-category="${proposal.category}" data-id="${proposal.id}">稍後</button>
       </div>
     </article>
-  `).join('') || '<div class="item">No pending proposals.</div>';
+  `).join('') || '<div class="item">沒有待審提案。</div>';
 }
 
 function bindProposalButtons() {
@@ -95,7 +95,7 @@ function bindProposalButtons() {
         }),
       });
       const result = await response.json();
-      button.textContent = result.applied === false ? 'Recorded' : 'Error';
+      button.textContent = result.applied === false ? '已記錄' : '錯誤';
     });
   }
 }
@@ -107,9 +107,9 @@ function renderInspiration() {
     <article class="item">
       <div class="item-title">${item.platform} · ${item.id}</div>
       <p>${item.abstracted_template}</p>
-      <div class="meta">originality ${item.originality_score ?? 'n/a'} · matched span ${item.matched_span || 'none'}</div>
+      <div class="meta">原創性 ${item.originality_score ?? '無資料'} · 比對片段 ${item.matched_span || '無'}</div>
     </article>
-  `).join('') || '<div class="item">No inspiration entries.</div>';
+  `).join('') || '<div class="item">沒有外部靈感項目。</div>';
 }
 
 function renderEvolution() {
@@ -118,9 +118,9 @@ function renderEvolution() {
   host.innerHTML = (vm.evolutionLog || []).map((item) => `
     <article class="item">
       <div class="item-title">${item.category}</div>
-      <div class="meta">${item.accepted} accepted · ${item.rejected} rejected · ${item.snoozed} snoozed</div>
+      <div class="meta">${item.accepted} 已採用 · ${item.rejected} 已駁回 · ${item.snoozed} 已稍後</div>
     </article>
-  `).join('') || '<div class="item">No audit decisions yet.</div>';
+  `).join('') || '<div class="item">尚無稽核決策。</div>';
 }
 
 function metric(label, value) {
@@ -133,26 +133,26 @@ function renderShare() {
   const platform = document.getElementById('share-platform-card');
   if (overall) {
     overall.innerHTML = `
-      <h2>Overall weekly card</h2>
+      <h2>整體每週卡片</h2>
       <div class="metric-grid">
-        ${metric('reach', shareData.overall.weekly.reach)}
-        ${metric('engagement', shareData.overall.weekly.engagement)}
-        ${metric('conversion proxy', shareData.overall.weekly.conversion_proxy)}
-        ${metric('per view', shareData.overall.weekly.per_view.toFixed(2))}
+        ${metric('觸及', shareData.overall.weekly.reach)}
+        ${metric('互動', shareData.overall.weekly.engagement)}
+        ${metric('轉換代理', shareData.overall.weekly.conversion_proxy)}
+        ${metric('每次瀏覽', shareData.overall.weekly.per_view.toFixed(2))}
       </div>
     `;
   }
   if (platform) {
     platform.innerHTML = `
-      <h2>Per-platform weekly cards</h2>
+      <h2>各平台每週卡片</h2>
       ${(shareData.perPlatform || []).map((card) => `
         <article class="item">
           <div class="item-title">${card.platform}</div>
           <div class="score-row">
-            ${metric('reach', card.weekly.reach)}
-            ${metric('engagement', card.weekly.engagement)}
-            ${metric('conversion proxy', card.weekly.conversion_proxy)}
-            ${metric('per view', card.weekly.per_view.toFixed(2))}
+            ${metric('觸及', card.weekly.reach)}
+            ${metric('互動', card.weekly.engagement)}
+            ${metric('轉換代理', card.weekly.conversion_proxy)}
+            ${metric('每次瀏覽', card.weekly.per_view.toFixed(2))}
           </div>
         </article>
       `).join('')}

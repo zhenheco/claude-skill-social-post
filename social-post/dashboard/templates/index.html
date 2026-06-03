@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=1440, initial-scale=1">
-  <title>Social Engine Dashboard</title>
+  <title>Social Engine 儀表板</title>
   <link rel="stylesheet" href="/static/dashboard.css">
   <style>:root{--vp-width:1440px}</style>
   <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.1/dist/echarts.min.js"></script>
@@ -14,74 +14,74 @@
     <header class="masthead">
       <div>
         <p class="eyebrow">zhenheai / AICycle</p>
-        <h1>Social Engine Weekly Dashboard</h1>
+        <h1>Social Engine 每週儀表板</h1>
       </div>
-      <div class="status">graduation: OFF (propose-only)</div>
+      <div class="status">graduation: OFF（畢業停用 · 僅建議模式）</div>
     </header>
 
     <section class="grid">
       <article id="panel-trend" class="panel panel-wide">
         <div class="panel-head">
-          <h2>Per-platform performance trend</h2>
-          <span>Matured rows only</span>
+          <h2>各平台成效趨勢</h2>
+          <span>僅成熟資料</span>
         </div>
         <div class="chart" data-chart="trend"></div>
       </article>
 
       <article id="panel-formula" class="panel">
         <div class="panel-head">
-          <h2>Formula leaderboard</h2>
-          <span>Reach / engagement / conversion proxy</span>
+          <h2>公式排行榜</h2>
+          <span>觸及 / 互動 / 轉換代理</span>
         </div>
         <div class="chart" data-chart="formula"></div>
       </article>
 
       <article id="panel-trust" class="panel">
         <div class="panel-head">
-          <h2>Trust gauges</h2>
-          <span>Display only</span>
+          <h2>信任量表</h2>
+          <span>僅供顯示</span>
         </div>
         <div class="chart" data-chart="trust"></div>
       </article>
 
       <article id="panel-proposals" class="panel panel-wide">
         <div class="panel-head">
-          <h2>Pending proposals</h2>
-          <span>Review writes audit decisions only</span>
+          <h2>待審提案</h2>
+          <span>審核只寫入稽核決策</span>
         </div>
         <div data-list="proposals" class="proposal-list"></div>
       </article>
 
       <article id="panel-calibration" class="panel">
         <div class="panel-head">
-          <h2>Prediction vs outcome</h2>
-          <span>Calibration</span>
+          <h2>預測 vs 結果</h2>
+          <span>校準</span>
         </div>
         <div class="chart" data-chart="calibration"></div>
       </article>
 
       <article id="panel-inspiration" class="panel">
         <div class="panel-head">
-          <h2>External inspiration</h2>
-          <span>Abstracted, originality-scored</span>
+          <h2>外部靈感</h2>
+          <span>已抽象化並評估原創性</span>
         </div>
         <div data-list="inspiration" class="feed"></div>
       </article>
 
       <article id="panel-evolution-log" class="panel">
         <div class="panel-head">
-          <h2>Evolution log</h2>
-          <span>Audit trail</span>
+          <h2>演化紀錄</h2>
+          <span>稽核軌跡</span>
         </div>
         <div data-list="evolution" class="timeline"></div>
       </article>
 
       <article id="panel-share-link" class="panel">
         <div class="panel-head">
-          <h2>Share view</h2>
-          <span>Fixed screenshot cards</span>
+          <h2>分享檢視</h2>
+          <span>固定截圖卡</span>
         </div>
-        <a class="share-button" href="/share">Open report cards</a>
+        <a class="share-button" href="/share">開啟報告卡</a>
       </article>
     </section>
   </main>

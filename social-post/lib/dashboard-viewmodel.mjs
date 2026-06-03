@@ -87,7 +87,7 @@ async function trustFor(platform, options) {
       value,
       distance_to_graduation: value == null ? null : Math.max(0, TRUST_THRESHOLD - value),
       display_only: true,
-      label: 'graduation: OFF (propose-only) — display only, no graduation this subset',
+      label: 'graduation: OFF（畢業停用 · 僅建議模式）— 僅供顯示，本子集不畢業',
     });
   });
 }
