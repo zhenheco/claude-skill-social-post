@@ -1,0 +1,29 @@
+[
+  {
+    "conversion_id": "line-001",
+    "conversion_type": "line_join",
+    "converted": true,
+    "ts": "2026-06-03T01:00:00.000Z",
+    "utm": "utm_source=linkedin&utm_medium=carousel&utm_campaign=topic-ai-001&utm_content=thread-a",
+    "post_id": "post-linkedin-1",
+    "likes": 120,
+    "impressions": 9000
+  },
+  {
+    "conversion_id": "consult-001",
+    "conversion_type": "consult_or_paid",
+    "converted": true,
+    "ts": "2026-06-03T02:00:00.000Z",
+    "utm": "utm_source=linkedin&utm_medium=carousel&utm_campaign=topic-ai-001&utm_content=thread-a",
+    "post_id": "post-linkedin-1",
+    "engagement": 0.12
+  },
+  {
+    "conversion_id": "consult-dup",
+    "conversion_type": "consult_or_paid",
+    "converted": true,
+    "ts": "2026-06-03T03:00:00.000Z",
+    "utm": "utm_source=beehiiv&utm_medium=newsletter&utm_campaign=topic-news-001&utm_content=welcome",
+    "post_id": "post-news-1"
+  }
+]

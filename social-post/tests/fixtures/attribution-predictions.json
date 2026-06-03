@@ -1,0 +1,16 @@
+[
+  {
+    "id": "pred-linkedin-1",
+    "type": "social-prediction",
+    "topic_id": "topic-ai-001",
+    "post_id": "post-linkedin-1",
+    "p_convert": 0.42
+  },
+  {
+    "id": "pred-news-1",
+    "type": "social-prediction",
+    "topic_id": "topic-news-001",
+    "post_id": "post-news-1",
+    "p_convert": 0.35
+  }
+]

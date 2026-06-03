@@ -1,0 +1,21 @@
+[
+  {
+    "conversion_id": "consult-dup",
+    "conversion_type": "consult_or_paid",
+    "converted": true,
+    "ts": "2026-06-03T03:01:00.000Z",
+    "utm": "utm_source=beehiiv&utm_medium=newsletter&utm_campaign=topic-news-001&utm_content=welcome",
+    "post_id": "post-news-1"
+  },
+  {
+    "conversion_id": "line-002",
+    "conversion_type": "line_join",
+    "converted": true,
+    "ts": "2026-06-03T04:00:00.000Z",
+    "utm": "utm_source=vocus&utm_medium=article&utm_campaign=topic-vocus-001&utm_content=thread-v",
+    "post_id": "post-vocus-1",
+    "email": "student@example.com",
+    "name": "Student Name",
+    "ip": "203.0.113.10"
+  }
+]
