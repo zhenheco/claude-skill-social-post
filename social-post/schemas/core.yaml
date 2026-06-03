@@ -1,0 +1,22 @@
+# L0 identity - NEVER auto-applied. Human-edited only.
+name: "Nelson Chou"
+niche: "企業 AI 導入、內容系統、自動化工作流"
+values: ["實戰導向", "不 hype", "可驗證"]
+avoid_topics: ["政治", "競品點名", "私人情感"]
+objective_hierarchy:
+  - tier: apex
+    metrics: [line_utm_joins, paid_or_consult_submits]
+  - tier: proxy
+    metrics: [save_rate, dm_sends, profile_visits, follow_rate]
+  - tier: vanity
+    metrics: [likes, impressions, engagement]
+automation_policy:
+  auto_send: false
+  browser_posting: false
+  trust_graduation: false
+  mode: propose_only
+write_bans:
+  - user_custom
+  - core.yaml
+  - objective_hierarchy
+  - automation_policy

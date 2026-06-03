@@ -9,6 +9,7 @@ export class TrustFileForbiddenError extends Error {}
 const DEFAULT_CONFIG = path.join(process.env.HOME ?? '', 'Documents/CC Cli/brands/personal/config.yaml');
 const STATE_SUBDIRS = ['inspiration/_raw', 'runs', 'assets'];
 const hardcodedAbsolute = new RegExp('^/(' + ['Users', 'home'].join('|') + ')/');
+const PREDICTIONS_PLATFORM_SENTINEL = '__platform__';
 
 export function expandTemplate(template, vars = {}) {
   const expanded = String(template).replace(/\$\{([A-Za-z_][A-Za-z0-9_]*)\}/g, (match, key) =>
@@ -69,17 +70,33 @@ export function loadConfig(configPath = DEFAULT_CONFIG) {
   });
 }
 
-export function resolve(key, platform, env = process.env, configPath = DEFAULT_CONFIG) {
-  const config = loadConfig(configPath);
+function effectiveConfigPath(env = process.env, configPath) {
+  return configPath ?? env.SOCIAL_POST_CONFIG_PATH ?? DEFAULT_CONFIG;
+}
+
+export function resolve(key, platform, env = process.env, configPath) {
+  const config = loadConfig(effectiveConfigPath(env, configPath));
   const vars = { HOME: env.HOME, SKILL_DIR: env.SKILL_DIR ?? '.claude', platform };
-  const pathKey = key === 'predictions' ? 'predictions_lane' : key;
+  const pathKey = key === 'predictions' ? 'predictions_dir' : key === 'decisions' ? 'decisions_file' : key;
   const template = config.paths?.[pathKey];
   if (!template) throw new Error(`unknown path key ${key}`);
   const resolvedPath = expandTemplate(template, vars);
   if (!path.isAbsolute(resolvedPath)) throw new Error(`resolved path is not absolute for ${key}`);
   const result = { path: resolvedPath };
-  if (pathKey === 'predictions_lane') result.lane = `social-${platform}`;
+  if (pathKey === 'predictions_dir') result.lane = `social-${platform}`;
   return Object.freeze(result);
+}
+
+export function stateRoot(env = process.env, configPath) {
+  return resolve('state_root', undefined, env, configPath).path;
+}
+
+export function predictionsDir(env = process.env, configPath) {
+  return resolve('predictions', PREDICTIONS_PLATFORM_SENTINEL, env, configPath).path;
+}
+
+export function decisionsFile(env = process.env, configPath) {
+  return resolve('decisions', undefined, env, configPath).path;
 }
 
 export function assertNoTrustFile(root) {
@@ -91,7 +108,7 @@ export function assertNoTrustFile(root) {
   }
 }
 
-export async function stateRootInit(platform, env = process.env, configPath = DEFAULT_CONFIG) {
+export async function stateRootInit(platform, env = process.env, configPath) {
   const root = resolve('state_root', platform, env, configPath).path;
   const platformRoot = path.join(root, platform);
   await mkdir(platformRoot, { recursive: true });

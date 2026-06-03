@@ -13,7 +13,10 @@ import {
   expandTemplate,
   loadConfig,
   resolve,
+  decisionsFile,
+  predictionsDir,
   stateRootInit,
+  stateRoot,
 } from '../lib/paths.mjs';
 
 const realConfigPath = path.join(os.homedir(), 'Documents/CC Cli/brands/personal/config.yaml');
@@ -26,7 +29,9 @@ const goodConfig = `paths:
   account_health: \${HOME}/\${SKILL_DIR}/state/social-evolve/\${platform}/account-health.yaml
   runs: \${HOME}/\${SKILL_DIR}/state/social-evolve/\${platform}/runs
   quota_ledger: \${HOME}/\${SKILL_DIR}/state/social-evolve/\${platform}/quota-ledger.jsonl
-  predictions_lane: \${HOME}/\${SKILL_DIR}/state/predictions/social-\${platform}.jsonl
+  predictions_dir: \${HOME}/\${SKILL_DIR}/state/predictions
+  decisions_file: \${HOME}/\${SKILL_DIR}/state/digest-decisions.json
+  voice_dir: \${HOME}/Documents/CC Cli/brands/personal/voice
 model_routing:
   drafting: stub
 budgets:
@@ -77,8 +82,11 @@ test('T3 resolve routes predictions to prediction-distill lane outside social-ev
     const result = resolve('predictions', 'facebook', env, configPath);
 
     assert.equal(result.lane, 'social-facebook');
-    assert.equal(result.path, path.join(home, '.claude/state/predictions/social-facebook.jsonl'));
+    assert.equal(result.path, path.join(home, '.claude/state/predictions'));
     assert.ok(!result.path.includes('social-evolve'));
+    assert.equal(predictionsDir(env, configPath), result.path);
+    assert.equal(decisionsFile(env, configPath), path.join(home, '.claude/state/digest-decisions.json'));
+    assert.equal(stateRoot(env, configPath), path.join(home, '.claude/state/social-evolve'));
   });
 });
 
@@ -142,4 +150,10 @@ test('T8 real config has no hardcoded paths, home literals, or op secrets', asyn
   const content = await readFile(realConfigPath, 'utf8');
 
   assert.doesNotMatch(content, homePathLiteralPattern);
+});
+
+test('T9 real config reuses prediction-distill state locations', () => {
+  assert.equal(resolve('predictions', 'facebook').path, path.join(os.homedir(), '.claude/state/predictions'));
+  assert.equal(resolve('predictions', 'facebook').lane, 'social-facebook');
+  assert.equal(resolve('decisions').path, path.join(os.homedir(), '.claude/state/digest-decisions.json'));
 });
