@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=1440, initial-scale=1">
+  <title>Social Engine Share View</title>
+  <link rel="stylesheet" href="/static/dashboard.css">
+  <style>:root{--vp-width:1440px}</style>
+</head>
+<body>
+  <script id="vm" type="application/json"><!--VM_JSON--></script>
+  <script id="share-data" type="application/json"><!--SHARE_JSON--></script>
+  <main class="viewport share-viewport">
+    <header class="masthead">
+      <div>
+        <p class="eyebrow">zhenheai / AICycle</p>
+        <h1>Weekly Social Engine Report</h1>
+      </div>
+      <div class="status">graduation: OFF (propose-only)</div>
+    </header>
+    <section class="share-grid">
+      <article id="share-overall-card" class="share-card overall-card"></article>
+      <article id="share-platform-card" class="share-card platform-card"></article>
+    </section>
+  </main>
+  <script src="/static/dashboard.js"></script>
+</body>
+</html>

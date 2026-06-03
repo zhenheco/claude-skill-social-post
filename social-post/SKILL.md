@@ -26,8 +26,13 @@ description: 學使用者的 Facebook 個人貼文語氣，依 14 天內容策�
 | 說「這篇好不好」「查流量」「分析」 | **診斷** | `references/evaluation.md` + `rules.md`（R6/R23）+ 目標 post 戰績 |
 | 說「歷史怎麼樣」「Day X 發生什麼」 | **案例** | `references/case_studies.md` |
 | 想查某條規則細節 | **規則** | `references/rules.md`（R1-R29 完整版）|
+| 說「/social dashboard」或要截圖週報 | **Dashboard** | `lib/dashboard-server.mjs` + `dashboard/`（local read-only, ECharts CDN, propose-only）|
 
 路由前用一句話告知使用者要做哪階段，給糾正機會。
+
+## `/social dashboard`
+
+Run `node scripts/dashboard.mjs` from this skill directory. It serves a local read-only dashboard URL with fixed 1440px screenshot views at `/` and `/share`; pending proposal buttons only record accept/reject/snooze audit decisions through the digest adapter and never apply changes. ECharts is loaded from the public jsDelivr CDN, so chart rendering needs local browser access to that script unless it is cached.
 
 ## 先決條件
 

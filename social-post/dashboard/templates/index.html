@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=1440, initial-scale=1">
+  <title>Social Engine Dashboard</title>
+  <link rel="stylesheet" href="/static/dashboard.css">
+  <style>:root{--vp-width:1440px}</style>
+  <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.1/dist/echarts.min.js"></script>
+</head>
+<body>
+  <script id="vm" type="application/json"><!--VM_JSON--></script>
+  <main class="viewport">
+    <header class="masthead">
+      <div>
+        <p class="eyebrow">zhenheai / AICycle</p>
+        <h1>Social Engine Weekly Dashboard</h1>
+      </div>
+      <div class="status">graduation: OFF (propose-only)</div>
+    </header>
+
+    <section class="grid">
+      <article id="panel-trend" class="panel panel-wide">
+        <div class="panel-head">
+          <h2>Per-platform performance trend</h2>
+          <span>Matured rows only</span>
+        </div>
+        <div class="chart" data-chart="trend"></div>
+      </article>
+
+      <article id="panel-formula" class="panel">
+        <div class="panel-head">
+          <h2>Formula leaderboard</h2>
+          <span>Reach / engagement / conversion proxy</span>
+        </div>
+        <div class="chart" data-chart="formula"></div>
+      </article>
+
+      <article id="panel-trust" class="panel">
+        <div class="panel-head">
+          <h2>Trust gauges</h2>
+          <span>Display only</span>
+        </div>
+        <div class="chart" data-chart="trust"></div>
+      </article>
+
+      <article id="panel-proposals" class="panel panel-wide">
+        <div class="panel-head">
+          <h2>Pending proposals</h2>
+          <span>Review writes audit decisions only</span>
+        </div>
+        <div data-list="proposals" class="proposal-list"></div>
+      </article>
+
+      <article id="panel-calibration" class="panel">
+        <div class="panel-head">
+          <h2>Prediction vs outcome</h2>
+          <span>Calibration</span>
+        </div>
+        <div class="chart" data-chart="calibration"></div>
+      </article>
+
+      <article id="panel-inspiration" class="panel">
+        <div class="panel-head">
+          <h2>External inspiration</h2>
+          <span>Abstracted, originality-scored</span>
+        </div>
+        <div data-list="inspiration" class="feed"></div>
+      </article>
+
+      <article id="panel-evolution-log" class="panel">
+        <div class="panel-head">
+          <h2>Evolution log</h2>
+          <span>Audit trail</span>
+        </div>
+        <div data-list="evolution" class="timeline"></div>
+      </article>
+
+      <article id="panel-share-link" class="panel">
+        <div class="panel-head">
+          <h2>Share view</h2>
+          <span>Fixed screenshot cards</span>
+        </div>
+        <a class="share-button" href="/share">Open report cards</a>
+      </article>
+    </section>
+  </main>
+  <script src="/static/dashboard.js"></script>
+</body>
+</html>
