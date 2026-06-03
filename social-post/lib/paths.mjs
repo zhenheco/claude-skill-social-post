@@ -22,27 +22,34 @@ export function expandTemplate(template, vars = {}) {
 
 function parseScalar(value) {
   const trimmed = value.trim();
+  if (trimmed === '') return {};
+  if (trimmed === 'null') return null;
+  if (trimmed === 'true') return true;
+  if (trimmed === 'false') return false;
   if (trimmed === '[]') return [];
+  if (trimmed.startsWith('[') && trimmed.endsWith(']')) {
+    const inner = trimmed.slice(1, -1).trim();
+    if (!inner) return [];
+    return inner.split(',').map((item) => parseScalar(item));
+  }
   if (/^-?\d+(\.\d+)?$/.test(trimmed)) return Number(trimmed);
   return trimmed;
 }
 
 function parseYamlSubset(content) {
   const root = {};
-  let section = null;
+  const stack = [{ indent: -1, value: root }];
   for (const line of content.split(/\r?\n/)) {
     const raw = line.replace(/\s+#.*$/, '');
     if (!raw.trim()) continue;
-    const top = raw.match(/^([A-Za-z0-9_-]+):\s*(.*)$/);
-    if (top) {
-      section = top[1];
-      root[section] = top[2] ? parseScalar(top[2]) : {};
-      continue;
-    }
-    const child = raw.match(/^  ([A-Za-z0-9_-]+):\s*(.*)$/);
-    if (child && section && typeof root[section] === 'object' && !Array.isArray(root[section])) {
-      root[section][child[1]] = parseScalar(child[2]);
-    }
+    const entry = raw.match(/^(\s*)([A-Za-z0-9_-]+):\s*(.*)$/);
+    if (!entry) continue;
+    const indent = entry[1].length;
+    while (stack.at(-1).indent >= indent) stack.pop();
+    const parent = stack.at(-1).value;
+    const value = parseScalar(entry[3]);
+    parent[entry[2]] = value;
+    if (value && typeof value === 'object' && !Array.isArray(value)) stack.push({ indent, value });
   }
   return root;
 }
