@@ -12,12 +12,12 @@
 
 1. **讀 `content_plan.md`** 看今天在 Day 幾、用哪個公式、發哪幾個平台、什麼目標。
 2. **讀 `formulas.md`** 對應公式那段（不用讀全部）。
-3. **讀 `style_profile.md`**（全文，用於 system-level voice 指引）。
+3. **讀 `brand.yaml`**（全檔，用於 system-level voice 指引）。
 4. **依使用者提供的「題材」+ 公式骨架 + 語氣，各平台各生一版草稿**。
    - 沒提供題材就看 `content_plan.md` 的題材提示 → 問使用者「今天要不要講 XXX？」
    - 不要一稿多投：FB 長、X 短、IG 配圖說明、Threads 口語短句
    - 若是 F6 爆款，嚴格照四段式結構
-   - 生成時用 `style_profile.md` 代表性原文作為 few-shot 語氣錨
+   - 生成時用 `brand.yaml` 的 `few_shot.mode_a` / `few_shot.mode_b` 原文作為 few-shot 語氣錨
 5. **預覽 + 確認**（安全閘）：
    - 把每平台草稿全文貼給使用者
    - 問：「確認發到 ＜平台清單＞ 嗎？回『確認』我就發，要改哪裡直接說。」

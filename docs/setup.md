@@ -25,11 +25,15 @@ New-Item -Path "$env:USERPROFILE\.claude\skills" -ItemType Directory -Force
 Copy-Item -Path "$env:USERPROFILE\tmp-social-post\social-post" -Destination "$env:USERPROFILE\.claude\skills\social-post" -Recurse
 ```
 
-把 example 檔改名（改名不改內容，之後 Claude 會覆寫）：
+個人語氣檔 brand.yaml（本 fork 放 CC Cli），content_plan 留 skill 內：
 
 ```bash
+# 個人語氣 brand.yaml → CC Cli（之後「幫我學 FB 風格」會覆寫 voice 段）
+mkdir -p ~/"Documents/CC Cli/brands/personal"
+cp ~/.claude/skills/social-post/brand.example.yaml \
+   ~/"Documents/CC Cli/brands/personal/brand.yaml"
+# content_plan 改名（留 skill 內）
 cd ~/.claude/skills/social-post
-mv style_profile.example.md style_profile.md
 mv content_plan.example.md content_plan.md
 ```
 
@@ -45,7 +49,7 @@ Claude 會：
 1. 確認 Chrome MCP 可用
 2. 問你 FB 個人頁網址（例 `facebook.com/yourname`）
 3. 打開 Chrome → 捲動載入 ~20 篇貼文
-4. 分析語氣 → 寫進 `style_profile.md`
+4. 分析語氣 → 寫進 `brand.yaml`（`$HOME/Documents/CC Cli/brands/personal/brand.yaml`）
 5. 給你 3 條重點請你驗收
 
 預期時間：5-10 分鐘。

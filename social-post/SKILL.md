@@ -20,9 +20,9 @@ description: 學使用者的 Facebook 個人貼文語氣，依 14 天內容策�
 
 | 觸發 | 階段 | 讀 |
 |---|---|---|
-| `style_profile.md` 不存在 / 說「重新學風格」 | **P1** | `references/learn_style.md` |
+| `brand.yaml` 不存在 / 說「重新學風格」 | **P1** | `references/learn_style.md` |
 | `content_plan.md` 不存在 / 說「重新規劃」「排新 14 天」 | **P0** | `references/phase0_plan.md` + `formulas.md` |
-| 說「發文」「今天發一篇」「PO」 | **P2** | `references/generate_and_publish.md` + `style_profile.md` + `content_plan.md` + `formulas.md`（目標公式段）+ `rules.md`（相關規則）+ 目標平台 ref |
+| 說「發文」「今天發一篇」「PO」 | **P2** | `references/generate_and_publish.md` + `brand.yaml` + `content_plan.md` + `formulas.md`（目標公式段）+ `rules.md`（相關規則）+ 目標平台 ref |
 | 說「這篇好不好」「查流量」「分析」 | **診斷** | `references/evaluation.md` + `rules.md`（R6/R23）+ 目標 post 戰績 |
 | 說「歷史怎麼樣」「Day X 發生什麼」 | **案例** | `references/case_studies.md` |
 | 想查某條規則細節 | **規則** | `references/rules.md`（R1-R29 完整版）|
@@ -33,6 +33,7 @@ description: 學使用者的 Facebook 個人貼文語氣，依 14 天內容策�
 
 - `mcp__Claude_in_Chrome__*` 可用（否則停、不模擬）
 - 使用者已登入目標平台（登入牆出現請使用者手動登，不自動化）
+- **個人語氣檔 = `brand.yaml`（YAML）**，路徑 `$HOME/Documents/CC Cli/brands/personal/brand.yaml`（由 CC Cli 管理，不在本 repo）。schema 範例見 `brand.example.yaml`。下方所有 `brand.yaml` 字眼皆指此檔。
 
 ## 🛡️ 安全閘（硬規則不可覆寫）
 
@@ -45,7 +46,7 @@ description: 學使用者的 Facebook 個人貼文語氣，依 14 天內容策�
 - 沒授權發文字眼就發
 - 跨平台同一段複製（每平台重新生成）
 - 自動按讚 / 回覆 / follow / 大量留言
-- 外傳 `style_profile.md` / 使用者資料
+- 外傳 `brand.yaml` / 使用者資料
 - 幫登入 / 改隱私 / 改帳號
 - 猜測 FB 個人頁網址（P1 必須問）
 - 刪除使用者留言 / 貼文（系統硬規則）
@@ -116,8 +117,8 @@ viral = 4 段 4 句結構 + 純血 voice + 全新敘事意圖 + 黃金時段
 ## 🔄 持續優化（開發原則）
 
 - **P0 私人版先行**：新規則先寫 `social-post/`，實證有效再同步 `../public/social-post/`
-- **P1 語氣永遠套用**：生成草稿必先讀 `style_profile.md`，不像 voice 重生成（公式 < 語氣）
-- **P2 同步開源時機**：跑 3-5 篇實戰 + 正面戰績 → 同步通用檔（`SKILL.md` `references/*.md`）；**絕不搬** `style_profile.md` `content_plan.md`；每次 = 新版號 + CHANGELOG + push
+- **P1 語氣永遠套用**：生成草稿必先讀 `brand.yaml`，不像 voice 重生成（公式 < 語氣）
+- **P2 同步開源時機**：跑 3-5 篇實戰 + 正面戰績 → 同步通用檔（`SKILL.md` `references/*.md`）；**絕不搬** `brand.yaml`（在 CC Cli，本就不在 repo）`content_plan.md`；每次 = 新版號 + CHANGELOG + push
 - **戰績追蹤**：發完使用者回報 → 立刻更新 `content_plan.md` 同筆（不新建 row）
 - **review 節奏**：每兩週說「review」→ 讀戰績 → 找最好/最差公式 → 新日曆寫回 + 舊的搬歷史段
 
@@ -129,7 +130,7 @@ viral = 4 段 4 句結構 + 純血 voice + 全新敘事意圖 + 黃金時段
 | FB 2026 演算法權重 + 4 指標 | `references/evaluation.md` |
 | 案例解剖（Day 1-7 + 5 月 Mode C）| `references/case_studies.md` |
 | F1-F23 公式 | `references/formulas.md` |
-| 受眾畫像 + 活躍時段 | `style_profile.md` |
+| 受眾畫像 + 活躍時段 | `brand.yaml` |
 | 今天 Day N + 戰績 | `content_plan.md` |
 
 ## 常見踩雷

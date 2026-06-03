@@ -1,5 +1,17 @@
 # Changelog
 
+## fork-1.0.0 — 2026-06-03（zhenheco fork：個人語氣改用 brand.yaml）
+
+fork 自 `Hao0321/claude-skill-social-post`。把個人語氣來源從 skill 內的 `style_profile.md`
+改為 CC Cli 管理的 YAML `brand.yaml`（預設 `$HOME/Documents/CC Cli/brands/personal/brand.yaml`）。
+
+- 新增 `social-post/brand.example.yaml`（schema 範例）
+- `SKILL.md` / `learn_style.md`(P1) / `generate_and_publish.md`(P2) / `facebook.md` / `case_studies.md`：
+  全部 `style_profile.md` 引用改為 `brand.yaml`，P1 改寫 YAML 鍵、P2 改讀 `few_shot`
+- `style_profile.example.md` 標記 `@deprecated`（保留作舊格式對照，skill 不再讀取）
+- README / `docs/setup.md` 安裝步驟改為 `cp brand.example.yaml → CC Cli`
+- 語氣檔脫離 repo（在 CC Cli），開源同步時天然不外洩個人 voice
+
 ## v1.0.0 — 2026-05-31（🎉 月底 milestone：框架穩定，5 月完整實證）
 
 從 2026-04-21 Day 1 mega-viral 開始，**41 天 / 25 個 case / 32 條規則 / 4 個 Mode / 14 個 release** — 整套框架穩定，ship v1.0.0 標記。

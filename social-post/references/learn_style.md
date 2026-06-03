@@ -56,7 +56,7 @@ docH 不再變大、底部出現 skeleton 但不解析 → FB 停止 feed 投放
 
 ## 4. 目標數
 
-**≥ 20 篇乾淨貼文**。若載不到，以實際收到的數量為準，在 `style_profile.md` 註明。
+**≥ 20 篇乾淨貼文**。若載不到，以實際收到的數量為準，在 `brand.yaml` 的 `sample` 欄註明。
 
 ## 5. 分析面向
 
@@ -76,11 +76,29 @@ docH 不再變大、底部出現 skeleton 但不解析 → FB 停止 feed 投放
 | 禁忌 | 沒出現什麼 |
 | **高參與度模式** | 讚數明顯高的幾篇有沒有共同結構？ → 寫成 Mode B 模板 |
 
-## 6. 寫入 `style_profile.md`
+## 6. 寫入 `brand.yaml`（YAML 格式）
 
-完整覆寫，但**保留 `<!-- user-edit -->` 以下的使用者自訂段**（如果既有檔案有）。
+寫到 `$HOME/Documents/CC Cli/brands/personal/brand.yaml`（CC Cli 管理，不在本 repo）。
 
-格式參考 `style_profile.example.md`：一句話語氣、句式、標點、開頭/收尾、emoji、主題、hashtag、人稱、避免領域、兩種模式的 few-shot 原文、身分線索。
+更新 voice 相關欄位，但**保留 `user_custom:` 鍵以下的使用者自訂段**（如果既有檔案有）。同時更新 `last_updated`（ISO 日期）與 `sample`。
+
+對應 YAML 鍵（schema 範例見 `brand.example.yaml`）：
+
+| 分析面向 | brand.yaml 鍵 |
+|---|---|
+| 一句話語氣 | `voice_oneliner` |
+| 句式與長度 | `sentence.{avg_length,post_length,structure,dislike}` |
+| 標點 | `punctuation.{width,exclamation,ellipsis,notes}` |
+| 開頭 / 收尾 | `opening[]` / `closing[]` |
+| Emoji | `emoji.{frequency,preferred,position}` |
+| 主題 / 禁忌 | `topics[]` / `avoid_topics[]` |
+| Hashtag | `hashtag.{usage,defaults}` |
+| 人稱 | `person.{first_person,collective,notes}` |
+| 高參與度模式 → Mode B 模板 | `modes.mode_b_template` |
+| 代表性原文 few-shot | `few_shot.{mode_a[],mode_b[]}` |
+| 身分線索 | `identity.{title,location,niche,audience,notes}` |
+
+YAML 多行字串用 `|`（block scalar）；陣列每項一行 `- "..."`。
 
 ## 7. 給使用者 3 條確認重點
 

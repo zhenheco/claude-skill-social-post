@@ -1,5 +1,7 @@
 # Personal Voice Profile — 林思萱 Vivi（範例）
 
+> 🚫 **@deprecated（本 fork）**：個人語氣已改用 YAML 的 `brand.yaml`（schema 範例見 `brand.example.yaml`），真實檔放 `$HOME/Documents/CC Cli/brands/personal/brand.yaml`。本 `.md` 僅保留作舊格式對照，skill 不再讀取。
+
 > ⚠️ **這是虛構示範檔**。第一次使用 skill 時跟 Claude 說「幫我學 FB 風格」，它會用 Claude in Chrome 爬你自己的 FB，覆蓋這個檔案成你自己的語氣 profile。
 >
 > 虛構角色：林思萱 Vivi，淡水手作麵包店「慢烤」老闆娘，2,500 FB 追蹤者

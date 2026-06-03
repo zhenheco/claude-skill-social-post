@@ -349,7 +349,7 @@ F4 / F6b / F13 這類社群自我指涉的內容**再用演算法會繼續限縮
 | **歸納 4** | AI/tech 受眾夜貓時段 22:00-01:00 | R4 |
 | **歸納 5** | 真 KPI 是社群成員 / GitHub star / 付費學員 | R7 |
 | **歸納 6** | 使用者 override pattern（meta 規則，下面詳述）| `SKILL.md` 持續優化段 |
-| **歸納 7** | F6b 4 段 4 句鐵則（Day 6 實證）| R8 + `style_profile.md` F6b 段 |
+| **歸納 7** | F6b 4 段 4 句鐵則（Day 6 實證）| R8 + `brand.yaml` `modes.mode_b_template` |
 | **歸納 8** | 敘事意圖判定主題冷卻，非公式或 hook 詞 | R5 |
 | **歸納 9** | ~~Mode B 月配額硬限 1-2 篇~~（5/5 實證推翻，併入 R5 敘事意圖月配額）| R9 廢除 |
 | **歸納 10** | Viral 4 條件公式：結構 + voice + 新意圖 + 時段，4 個 AND | R8 + R5 + R10 + R4 整合 |

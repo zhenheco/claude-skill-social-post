@@ -64,7 +64,7 @@
 
 ## 它在幹嘛（給一般人看的版本）
 
-1. **學你語氣** — Claude 打開你的 FB 個人頁，讀你最近 20 篇貼文，萃取你的用字習慣、常用 emoji、「爽啦」「草」這種口語。寫成一個 `style_profile.md`。
+1. **學你語氣** — Claude 打開你的 FB 個人頁，讀你最近 20 篇貼文，萃取你的用字習慣、常用 emoji、「爽啦」「草」這種口語。寫成一個 `brand.yaml`（本 fork 改用 YAML，預設放 `$HOME/Documents/CC Cli/brands/personal/brand.yaml`；schema 見 `social-post/brand.example.yaml`）。
 2. **排內容日曆** — 依你的目標（擴大社群 / 轉換付費 / 建立品牌）和頻率，用 7 個**小帳號驗證過的 viral 公式**排 14 天每日內容。
 3. **每天生成 + 自動發** — 你說「今天發一篇」→ Claude 讀日曆 → 問你題材 → 依你的語氣生草稿 → 你確認 → Chrome 自動發到 FB/IG/Threads/X。
 4. **追蹤戰績 + 自動優化** — 每 2 小時查貼文流量，寫進戰績表。每兩週 review，表現好的公式加頻、差的換題材。
@@ -111,9 +111,13 @@ cp -r claude-skill-social-post/social-post ~/.claude/skills/social-post
 # Windows (PowerShell):
 Copy-Item -Path "claude-skill-social-post\social-post" -Destination "$env:USERPROFILE\.claude\skills\social-post" -Recurse
 
-# 3. 把 example 檔改名（之後 Claude 會覆寫成你自己的版本）
+# 3a. 個人語氣檔 brand.yaml（本 fork 放 CC Cli，不放 skill 內）
+mkdir -p ~/"Documents/CC Cli/brands/personal"
+cp claude-skill-social-post/social-post/brand.example.yaml \
+   ~/"Documents/CC Cli/brands/personal/brand.yaml"   # 之後說「幫我學 FB 風格」會覆寫 voice 段
+
+# 3b. content_plan 仍留在 skill 內
 cd ~/.claude/skills/social-post
-mv style_profile.example.md style_profile.md
 mv content_plan.example.md content_plan.md
 ```
 

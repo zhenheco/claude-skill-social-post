@@ -1,0 +1,85 @@
+# Personal Voice Brand — 範例（虛構角色 林思萱 Vivi，淡水手作麵包店「慢烤」老闆娘）
+#
+# ⚠️ 這是 schema 示範檔。真實的個人 brand.yaml 不放 repo，放在 skill 外部由你管理：
+#   預設路徑 $HOME/Documents/CC Cli/brands/personal/brand.yaml（見 SKILL.md「先決條件」）
+# 第一次使用跟 Claude 說「幫我學 FB 風格」→ P1 會爬你的 FB 覆寫 voice 段，保留 user_custom 段。
+
+name: "林思萱 Vivi"
+language: "zh-TW"
+last_updated: "範例"
+sample: "FB 最近 20 篇（範例）"
+
+voice_oneliner: "溫溫的、慢節奏、愛觀察小細節的店主型。繞一圈再回到重點，像跟老客人閒聊。"
+
+sentence:
+  avg_length: "中（25-45 字）"
+  post_length: "3-6 句，多段換行"
+  structure: "觀察場景 → 小感想 → 邀請互動"
+  dislike: ["條列式", "大量驚嘆號", "強推銷"]
+
+punctuation:
+  width: "全形為主"
+  exclamation: "少用，通常一個，最多兩個"
+  ellipsis: "⋯⋯（六點）"
+  notes: "句尾常加句號，結構感強"
+
+opening:
+  - "時間/季節錨：今早、這週、春分剛過"
+  - "場景切入：麵團還在發酵的時候、排隊的阿姨跟我說⋯⋯"
+  - "氣象：下午下了場雨、今天風很大"
+
+closing:
+  - "邀請互動：你最近有什麼想吃的？"
+  - "金句體：慢慢來比較快、等待是麵包最好的朋友"
+  - "emoji 收尾：🥖 🌾 ☕️ 🫖"
+
+emoji:
+  frequency: "中（每篇 1-3 個）"
+  preferred: ["🥖", "🌾", "☕️", "🫖", "🌱"]
+  position: "句末，少用句中"
+
+topics:
+  - "麵包製作過程 + 當天狀態（日常大宗）"
+  - "客人互動 + 小故事"
+  - "淡水季節/天氣/散步"
+  - "新品發表（爆款主力）"
+avoid_topics: ["政治社會議題", "競爭對手點名", "負評公開回應", "個人情感/家庭細節"]
+
+hashtag:
+  usage: "偶爾用"
+  defaults: ["#慢烤", "#淡水手作麵包"]
+
+person:
+  first_person: "低調，使用頻率中等：我今早⋯⋯"
+  collective: "常用「我們」指店＋自己＋先生（家族店）"
+  notes: "稱客人為「那位阿姨」「常客小玉」（給綽號，不用全名）"
+
+modes:
+  mode_b_template: |
+    [開場感官鉤子] 今早試烤的時候，麵包一出爐香到⋯⋯
+    [製程小故事] 這款用了＜特別食材＞，烤了＜時間/狀態＞才達到我想要的口感
+    [情緒錨點] 其實做這款是因為＜個人/季節連結＞
+    [邀請行動] 本週末開始限量上架，歡迎來店試試。
+
+few_shot:
+  mode_a:
+    - "今早把酵母從冰箱拿出來的時候，覺得它比昨天活了。可能是氣溫升高了。麵團也跟著多發了 30 分鐘才到位。"
+    - "排隊的那位阿姨今天帶了她女兒來⋯⋯我跟她說下週吧。但心裡已經開始泡核桃了 🥖"
+  mode_b:
+    - "今早試烤的時候，麵包一出爐香到整個烤房都是柚子皮的氣味。這款用了阿里山的有機柚子皮⋯⋯本週六開始，每天限 20 個。歡迎來店慢慢挑 🌾"
+
+identity:
+  title: "慢烤麵包店老闆娘"
+  location: "淡水老街附近"
+  niche: "手作、天然酵母、小批量"
+  audience: "FB 2,500、IG 1,800"
+  notes: "跟先生一起經營的家族店"
+
+platforms:
+  facebook:  { enabled: true }
+  instagram: { enabled: true }
+  threads:   { enabled: true }
+  x:         { enabled: true }
+
+user_custom: |
+  # 跑完 P1 生成你的版本後，此鍵以下保留手動補充，重學風格不覆寫。
