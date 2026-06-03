@@ -22,6 +22,7 @@ const REQUIRED_FIELDS = Object.freeze([
   'changelog',
   'applied_proposal_id',
 ]);
+const FEW_SHOT_ORIGINS = Object.freeze(['human', 'machine', 'benchmark_distilled']);
 
 const DEFAULTS = Object.freeze({
   facebook: ['zh-tw', 'community-post', 'private_share'],
@@ -51,8 +52,8 @@ function validateFewShot(fewShot, errors) {
     return;
   }
   fewShot.forEach((entry, index) => {
-    if (!['human', 'machine'].includes(entry?.origin)) {
-      pushError(errors, 'few_shot_origin_invalid', `few_shot[${index}].origin`, 'origin must be human or machine');
+    if (!FEW_SHOT_ORIGINS.includes(entry?.origin)) {
+      pushError(errors, 'few_shot_origin_invalid', `few_shot[${index}].origin`, 'origin must be human, machine, or benchmark_distilled');
     }
   });
 }

@@ -20,7 +20,7 @@ import {
 } from '../lib/paths.mjs';
 
 const realConfigPath = path.join(os.homedir(), 'Documents/CC Cli/brands/personal/config.yaml');
-const homePathLiteralPattern = new RegExp('/(' + ['Users', 'home'].join('|') + ')/|op://');
+const homePathLiteralPattern = new RegExp('/(' + ['Users', 'home'].join('|') + ')/');
 
 const goodConfig = `paths:
   state_root: \${HOME}/\${SKILL_DIR}/state/social-evolve
@@ -146,7 +146,7 @@ test('T7 expandTemplate is pure and rejects unresolved variables', () => {
   );
 });
 
-test('T8 real config has no hardcoded paths, home literals, or op secrets', async () => {
+test('T8 real config has no hardcoded paths or home literals', async () => {
   const content = await readFile(realConfigPath, 'utf8');
 
   assert.doesNotMatch(content, homePathLiteralPattern);

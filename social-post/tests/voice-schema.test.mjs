@@ -55,6 +55,7 @@ test('few_shot origin must be human or machine and points at the index', () => {
     assert.equal(result.errors[0].path, `few_shot[${index}].origin`);
   }
   assert.equal(voice.validateVoiceFile(baseVoice({ few_shot: [{ origin: 'machine' }] }), { platform: 'facebook' }).ok, true);
+  assert.equal(voice.validateVoiceFile(baseVoice({ few_shot: [{ origin: 'benchmark_distilled' }] }), { platform: 'facebook' }).ok, true);
 });
 
 test('forbidden_imports must be a list', () => {
@@ -86,6 +87,7 @@ test('scaffold produces valid empty files for all five platforms', () => {
     assert.deepEqual(scaffold.voice_state, { human_sample_count: 0, last_reanchor: null });
   }
 });
+
 
 test('linkedin scaffold forbids R1-R32 and survives serialization', () => {
   const scaffold = voice.scaffold('linkedin');

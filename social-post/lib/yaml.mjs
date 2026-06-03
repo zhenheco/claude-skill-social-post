@@ -14,6 +14,7 @@ function parseScalar(value) {
   if (trimmed === 'true') return true;
   if (trimmed === 'false') return false;
   if (trimmed === '[]') return [];
+  if (trimmed === '{}') return {};
   if (/^-?\d+(\.\d+)?$/.test(trimmed)) return Number(trimmed);
   if (trimmed.startsWith('"') && trimmed.endsWith('"')) return JSON.parse(trimmed);
   return trimmed;
@@ -84,32 +85,49 @@ export function dump(obj) {
 
 export function parse(content) {
   const root = {};
-  let section = null;
-  let item = null;
+  const stack = [{ indent: -1, value: root, parent: null, key: null }];
+
+  function normalizeContainer(entry, nextType) {
+    if (nextType === 'array' && !Array.isArray(entry.value)) {
+      if (entry.value && typeof entry.value === 'object' && Object.keys(entry.value).length === 0 && entry.parent) {
+        const next = [];
+        entry.parent[entry.key] = next;
+        entry.value = next;
+      }
+    }
+    return entry.value;
+  }
+
   for (const line of content.split(/\r?\n/).map(stripComment)) {
     if (!line.trim()) continue;
-    const top = line.match(/^([A-Za-z0-9_-]+):\s*(.*)$/);
-    if (top) {
-      section = top[1];
-      item = null;
-      root[section] = parseScalar(top[2]);
+
+    const list = line.match(/^(\s*)-\s*(?:(\w+):\s*)?(.*)$/);
+    if (list) {
+      const indent = list[1].length;
+      while (stack.at(-1).indent >= indent) stack.pop();
+      const parentEntry = stack.at(-1);
+      const parent = normalizeContainer(parentEntry, 'array');
+      if (!Array.isArray(parent)) continue;
+      const value = list[2] ? { [list[2]]: parseScalar(list[3]) } : parseScalar(list[3]);
+      parent.push(value);
+      if (value && typeof value === 'object' && !Array.isArray(value)) {
+        stack.push({ indent, value, parent, key: parent.length - 1 });
+      }
       continue;
     }
-    const list = line.match(/^  -\s*(?:(\w+):\s*)?(.*)$/);
-    if (list && section) {
-      if (!Array.isArray(root[section])) root[section] = [];
-      item = list[1] ? { [list[1]]: parseScalar(list[2]) } : parseScalar(list[2]);
-      root[section].push(item);
+
+    const entry = line.match(/^(\s*)([A-Za-z0-9_-]+):\s*(.*)$/);
+    if (entry) {
+      const indent = entry[1].length;
+      while (stack.at(-1).indent >= indent) stack.pop();
+      const parent = normalizeContainer(stack.at(-1), 'object');
+      if (!parent || typeof parent !== 'object' || Array.isArray(parent)) continue;
+      const key = entry[2];
+      const value = parseScalar(entry[3]);
+      parent[key] = value;
+      if (value && typeof value === 'object') stack.push({ indent, value, parent, key });
       continue;
     }
-    const child = line.match(/^  ([A-Za-z0-9_-]+):\s*(.*)$/);
-    if (child && section) {
-      if (!root[section] || Array.isArray(root[section])) root[section] = {};
-      root[section][child[1]] = parseScalar(child[2]);
-      continue;
-    }
-    const itemChild = line.match(/^    ([A-Za-z0-9_-]+):\s*(.*)$/);
-    if (itemChild && item && typeof item === 'object') item[itemChild[1]] = parseScalar(itemChild[2]);
   }
   return root;
 }
