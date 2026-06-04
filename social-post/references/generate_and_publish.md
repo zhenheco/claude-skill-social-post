@@ -12,21 +12,26 @@
 
 1. **讀 `content_plan.md`** 看今天在 Day 幾、用哪個公式、發哪幾個平台、什麼目標。
 2. **讀 `formulas.md`** 對應公式那段（不用讀全部）。
-3. **讀 `brand.yaml`**（全檔，用於 system-level voice 指引）。
-4. **依使用者提供的「題材」+ 公式骨架 + 語氣，各平台各生一版草稿**。
+3. **產生平台語氣 brief**：在 skill 目錄執行 `node scripts/generate-brief.mjs --platform <platform> --topic "<topic>"`。
+   - 來源是 `$HOME/Documents/CC Cli/brands/personal/core.yaml` + `voice/<platform>.yaml`（由 `config.yaml` 的 `voice_dir` 指向）。
+   - 若 CLI 回 `voice not seeded for <platform> — run voice-bootstrap first`，停止生成，先跑 voice bootstrap 或改走下方 @deprecated fallback。
+   - @deprecated fallback：只有 `voice/<platform>.yaml` 缺失時才讀舊 `$HOME/Documents/CC Cli/brands/personal/brand.yaml`；新流程不得主動依賴 `brand.yaml`。
+4. **依使用者提供的「題材」+ 公式骨架 + generation brief，各平台各生一版草稿**。
    - 沒提供題材就看 `content_plan.md` 的題材提示 → 問使用者「今天要不要講 XXX？」
    - 不要一稿多投：FB 長、X 短、IG 配圖說明、Threads 口語短句
    - 若是 F6 爆款，嚴格照四段式結構
-   - 生成時用 `brand.yaml` 的 `few_shot.mode_a` / `few_shot.mode_b` 原文作為 few-shot 語氣錨
+   - 生成時套用 CLI 選出的 hook archetype skeleton，把 `{entity}` 類 placeholder 補成題材中的具體人事物。
+   - 套用 `style_fingerprint`：sentence length、beats、emoji density、link rate、register hint 都要貼近 brief。
+   - 套用 `voice_directive`：更銳（sharpness:high）、展現實力（demonstrate_expertise）、proof-over-claim，不空喊。
+   - 結尾使用 apex CTA（`objective_hierarchy` tier=apex metrics），但仍保持草稿口吻自然。
+   - 避開 `avoid_topics` + `forbidden_imports`。
 5. **預覽 + 確認**（安全閘）：
    - 把每平台草稿全文貼給使用者
-   - 問：「確認發到 ＜平台清單＞ 嗎？回『確認』我就發，要改哪裡直接說。」
-   - 沒拿到「確認」字眼就**不要發**。這是 SKILL.md 的硬規則。
-6. **依序發佈**：讀目標平台的 `references/{facebook,instagram,threads,x}.md`，照步驟發。
-7. **每發完一個回報**：「✓ 已發到 ＜平台＞；連結：＜若能取得＞」。
-8. **任何一平台失敗就停手**：告訴使用者（已發哪些、哪個卡住、看到什麼錯誤），等指示。不要跳過繼續下一個。
-9. **發完追蹤**：問使用者「要不要等幾小時後幫你看一下數據？」——若要，把「今天發完後 N 小時回看」記 note。
-10. **更新 `content_plan.md`**：
+   - 明確標示：`Output is a DRAFT only. Human posts every word. No auto-send (automation_policy.mode=propose_only).`
+   - 不自動發佈、不呼叫 posting API、不按送出；作者只產出 DRAFT，使用者人工決定每個字。
+6. **若使用者另外要求手動發佈協助**：讀目標平台的 `references/{facebook,instagram,threads,x}.md`，且仍必須先取得當前 session 明確確認。
+7. **發完追蹤**：問使用者「要不要等幾小時後幫你看一下數據？」——若要，把「今天發完後 N 小時回看」記 note。
+8. **更新 `content_plan.md`**：
     - 把「最近發文日期」改成今天
     - 「今天在哪一天」+1（若到 14 就回 1）
     - 戰績表追加一行（讚/留/分享先空著，事後再填）

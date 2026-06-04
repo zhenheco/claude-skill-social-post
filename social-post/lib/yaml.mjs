@@ -1,10 +1,12 @@
 function stripComment(line) {
   let quoted = false;
-  return [...line].reduce((out, char) => {
+  let out = '';
+  for (const char of line) {
     if (char === '"') quoted = !quoted;
     if (char === '#' && !quoted) return out.endsWith(' ') ? out.trimEnd() : out;
-    return out + char;
-  }, '');
+    out += char;
+  }
+  return out;
 }
 
 function parseScalar(value) {
