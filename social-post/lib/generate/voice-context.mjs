@@ -71,6 +71,12 @@ function languageKey(value) {
   return text ? 'en' : undefined;
 }
 
+function styleFingerprintForLanguage(voice) {
+  const byLang = asPlainObject(voice.style_fingerprint_by_lang);
+  const targetLanguage = String(voice.primary_language ?? '');
+  return asPlainObject(byLang[targetLanguage] ?? voice.style_fingerprint);
+}
+
 export async function loadVoiceContext(platform, options = {}) {
   const env = options.env ?? process.env;
   const normalized = assertVoicePlatform(platform);
@@ -109,7 +115,7 @@ export async function loadVoiceContext(platform, options = {}) {
     format_default: voice.format_default,
     hook_archetypes: seeded ? asArray(voice.hook_style?.allowed) : [],
     few_shot: seeded ? fewShot : [],
-    style_fingerprint: asPlainObject(voice.style_fingerprint),
+    style_fingerprint: styleFingerprintForLanguage(voice),
     cta_style: asPlainObject(voice.cta_style),
     forbidden_imports: asArray(voice.forbidden_imports),
     cadence_ceiling: asPlainObject(voice.cadence_ceiling),

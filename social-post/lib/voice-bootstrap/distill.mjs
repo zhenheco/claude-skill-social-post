@@ -136,16 +136,19 @@ function registerHint(posts) {
   return 'neutral';
 }
 
-export function styleFingerprint(posts = []) {
-  const rows = posts.map((post) => ({ text: String(post.text ?? post ?? '') }));
+function emptyStyleFingerprint() {
+  return Object.freeze({
+    sentence_length_bucket: 'short',
+    emoji_density: 0,
+    avg_beats: 0,
+    link_rate: 0,
+    register_hint: 'neutral',
+  });
+}
+
+function computeStyleFingerprint(rows) {
   if (rows.length === 0) {
-    return Object.freeze({
-      sentence_length_bucket: 'short',
-      emoji_density: 0,
-      avg_beats: 0,
-      link_rate: 0,
-      register_hint: 'neutral',
-    });
+    return emptyStyleFingerprint();
   }
   const script = dominantScript(rows);
   const avgLength = rows.reduce((sum, post) => sum + sentenceUnits(post.text, script), 0) / rows.length;
@@ -161,6 +164,47 @@ export function styleFingerprint(posts = []) {
     link_rate: Number((linkPosts / rows.length).toFixed(3)),
     register_hint: registerHint(rows),
   });
+}
+
+function languageWeight(rows) {
+  const joined = rows.map((post) => post.text).join('\n');
+  const cjkChars = Array.from(joined.matchAll(CJK_GLOBAL_RE)).length;
+  const latinWords = joined.match(/[A-Za-z0-9]+(?:['-][A-Za-z0-9]+)*/gu)?.length ?? 0;
+  return Math.max(cjkChars, latinWords);
+}
+
+function dominantLanguage(languages) {
+  return [...languages.entries()].sort((left, right) =>
+    right[1].length - left[1].length
+    || languageWeight(right[1]) - languageWeight(left[1])
+    || left[0].localeCompare(right[0]),
+  )[0]?.[0];
+}
+
+function rowsByLanguage(posts) {
+  const languages = new Map();
+  for (const post of posts) {
+    const row = { text: String(post.text ?? post ?? '') };
+    const lang = languageOf(row.text);
+    const rows = languages.get(lang) ?? [];
+    rows.push(row);
+    languages.set(lang, rows);
+  }
+  return languages;
+}
+
+export function styleFingerprintByLang(posts = []) {
+  const languages = rowsByLanguage(posts);
+  return Object.freeze(Object.fromEntries(
+    [...languages.entries()].map(([lang, rows]) => [lang, computeStyleFingerprint(rows)]),
+  ));
+}
+
+export function styleFingerprint(posts = []) {
+  const languages = rowsByLanguage(posts);
+  const primary = dominantLanguage(languages);
+  if (!primary) return emptyStyleFingerprint();
+  return computeStyleFingerprint(languages.get(primary));
 }
 
 function engagementScore(post) {
@@ -218,6 +262,7 @@ export function distill(posts = [], { minEngagementPct = 0 } = {}) {
   return Object.freeze({
     patterns: Object.freeze(patterns),
     style_fingerprint: styleFingerprint(selected),
+    style_fingerprint_by_lang: styleFingerprintByLang(selected),
     sample_count: selected.length,
     other_count: otherCount,
   });

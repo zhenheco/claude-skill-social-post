@@ -60,13 +60,12 @@ test('skeletonize strips URLs, handles, entities, and numbers', () => {
 
 test('styleFingerprint summarizes sentence length, emoji density, beats, links, and register', () => {
   const fp = styleFingerprint([
-    post({ text: 'I shipped the first version. Here is the lesson: keep the loop tiny 🙂 https://example.com' }),
-    post({ text: '老實說今天卡住了，但最後找到更穩的節奏。' }),
+    post({ text: 'I shipped it. Lesson: keep loop tiny 🙂 https://example.com' }),
+    post({ text: 'Honestly, I kept the review loop small.' }),
   ]);
 
   assert.deepEqual(fp, {
-    // CJK-dominant mixed fixtures now use char-calibrated thresholds instead of legacy word thresholds.
-    sentence_length_bucket: 'short',
+    sentence_length_bucket: 'medium',
     emoji_density: 0.5,
     avg_beats: 2,
     link_rate: 0.5,

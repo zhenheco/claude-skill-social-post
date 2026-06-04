@@ -82,6 +82,8 @@ test('scaffold produces valid empty files for all five platforms', () => {
     const scaffold = voice.scaffold(platform);
     assert.equal(voice.validateVoiceFile(scaffold, { platform }).ok, true);
     assert.equal(scaffold.version, '0.1.0');
+    assert.deepEqual(scaffold.style_fingerprint, {});
+    assert.deepEqual(scaffold.style_fingerprint_by_lang, {});
     assert.deepEqual(scaffold.changelog, []);
     assert.equal(scaffold.applied_proposal_id, null);
     assert.deepEqual(scaffold.voice_state, { human_sample_count: 0, last_reanchor: null });
@@ -135,6 +137,29 @@ test('writeVoice writes a human-editable yaml file through configured voice_dir'
 `;
   const env = { HOME: home, SKILL_DIR: '.claude', SOCIAL_POST_CONFIG_PATH: configPath };
   const scaffold = voice.scaffold('threads');
+  scaffold.style_fingerprint = {
+    sentence_length_bucket: 'medium',
+    emoji_density: 0,
+    avg_beats: 2,
+    link_rate: 0,
+    register_hint: 'personal',
+  };
+  scaffold.style_fingerprint_by_lang = {
+    'zh-tw': {
+      sentence_length_bucket: 'short',
+      emoji_density: 0,
+      avg_beats: 1,
+      link_rate: 0,
+      register_hint: 'personal',
+    },
+    en: {
+      sentence_length_bucket: 'medium',
+      emoji_density: 0,
+      avg_beats: 2,
+      link_rate: 0,
+      register_hint: 'operator',
+    },
+  };
   await writeFile(configPath, config, 'utf8');
 
   try {

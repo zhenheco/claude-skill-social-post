@@ -79,6 +79,7 @@ function mergeBootstrapVoice(voice, distilled, now) {
     allowed: unique([...(next.hook_style?.allowed ?? []), ...(distilled.patterns ?? []).map((pattern) => pattern.pattern)]),
   };
   next.style_fingerprint = { ...(distilled.style_fingerprint ?? {}) };
+  next.style_fingerprint_by_lang = { ...(distilled.style_fingerprint_by_lang ?? {}) };
 
   const existingFewShot = Array.isArray(next.few_shot) ? next.few_shot : [];
   const existingPatterns = new Set(existingFewShot.map((entry) => entry?.pattern).filter(Boolean));

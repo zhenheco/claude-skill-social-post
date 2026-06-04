@@ -37,7 +37,7 @@ automation_policy:
   mode: propose_only
 `;
 
-function voice({ fewShot = true } = {}) {
+function voice({ fewShot = true, styleFingerprintByLang = false } = {}) {
   return `primary_language: zh-tw
 format_default: short-thread
 cadence_ceiling:
@@ -57,7 +57,20 @@ style_fingerprint:
   emoji_density: 0
   link_rate: 0
   register_hint: personal
-few_shot:${fewShot ? `
+${styleFingerprintByLang ? `style_fingerprint_by_lang:
+  zh-tw:
+    sentence_length_bucket: short
+    avg_beats: 1.5
+    emoji_density: 0
+    link_rate: 0
+    register_hint: personal
+  en:
+    sentence_length_bucket: long
+    avg_beats: 4
+    emoji_density: 0.2
+    link_rate: 0.1
+    register_hint: operator
+` : ''}few_shot:${fewShot ? `
   - pattern: news_hottake
     skeleton: "{工具} 出了 {新功能}。{反直覺判斷}。"
     origin: benchmark_distilled
@@ -122,6 +135,26 @@ test('loadVoiceContext merges core identity, apex CTAs, directive, and platform 
     assert.deepEqual(brief.cta_style, { allowed: ['line_join'] });
     assert.deepEqual(brief.forbidden_imports, ['R25']);
     assert.deepEqual(brief.cadence_ceiling, { posts_per_day: 1 });
+  });
+});
+
+test('loadVoiceContext selects style targets from the primary language map when present', async () => {
+  await withFixture(async ({ configPath, corePath, env, threadsVoice }) => {
+    await writeFile(threadsVoice, voice({ styleFingerprintByLang: true }), 'utf8');
+
+    const brief = await loadVoiceContext('threads', { configPath, corePath, env });
+
+    assert.deepEqual(
+      brief.style_fingerprint,
+      {
+        sentence_length_bucket: 'short',
+        avg_beats: 1.5,
+        emoji_density: 0,
+        link_rate: 0,
+        register_hint: 'personal',
+      },
+      'generation should use zh-tw style targets from style_fingerprint_by_lang instead of the flat mixed fallback',
+    );
   });
 });
 

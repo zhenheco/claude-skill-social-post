@@ -86,6 +86,22 @@ const distilled = Object.freeze({
     link_rate: 0.5,
     register_hint: 'personal',
   }),
+  style_fingerprint_by_lang: Object.freeze({
+    'zh-tw': Object.freeze({
+      sentence_length_bucket: 'short',
+      emoji_density: 0,
+      avg_beats: 1.5,
+      link_rate: 0,
+      register_hint: 'personal',
+    }),
+    en: Object.freeze({
+      sentence_length_bucket: 'medium',
+      emoji_density: 0.5,
+      avg_beats: 2,
+      link_rate: 0.5,
+      register_hint: 'operator',
+    }),
+  }),
   sample_count: 3,
 });
 
@@ -139,6 +155,11 @@ test('seedVoice bootstrap mutates voice with benchmark patterns, version bump, c
     assert.equal(after.version, '1.3.0');
     assert.deepEqual(after.hook_style.allowed, ['existing_hook', 'vulnerability_reveal', 'principle_contrast']);
     assert.deepEqual(after.style_fingerprint, distilled.style_fingerprint);
+    assert.deepEqual(
+      after.style_fingerprint_by_lang,
+      distilled.style_fingerprint_by_lang,
+      'seedVoice should persist per-language style targets so later generation can select the target language',
+    );
     assert.equal(after.few_shot.length, 3);
     assert.equal(after.few_shot[1].origin, 'benchmark_distilled');
     assert.equal(after.few_shot[1].skeleton, '{placeholder} reveal then lesson');

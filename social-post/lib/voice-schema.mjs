@@ -114,6 +114,8 @@ export function scaffold(platform) {
     forbidden_imports: platform === 'linkedin' ? [...R1_R32] : [],
     hook_style: { allowed: [], banned: [] },
     cta_style: { allowed: [], banned: [] },
+    style_fingerprint: {},
+    style_fingerprint_by_lang: {},
     few_shot: [],
     voice_state: { human_sample_count: 0, last_reanchor: null },
     changelog: [],

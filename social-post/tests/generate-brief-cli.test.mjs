@@ -33,7 +33,7 @@ automation_policy:
   mode: propose_only
 `;
 
-function voice({ fewShot = true } = {}) {
+function voice({ fewShot = true, styleFingerprintByLang = false } = {}) {
   return `primary_language: zh-tw
 format_default: short-thread
 cadence_ceiling:
@@ -51,7 +51,20 @@ style_fingerprint:
   emoji_density: 0
   link_rate: 0
   register_hint: personal
-few_shot:${fewShot ? `
+${styleFingerprintByLang ? `style_fingerprint_by_lang:
+  zh-tw:
+    sentence_length_bucket: short
+    avg_beats: 1.5
+    emoji_density: 0
+    link_rate: 0
+    register_hint: personal
+  en:
+    sentence_length_bucket: long
+    avg_beats: 4
+    emoji_density: 0.2
+    link_rate: 0.1
+    register_hint: operator
+` : ''}few_shot:${fewShot ? `
   - pattern: news_hottake
     skeleton: "{工具} 出了 {新功能}。{反直覺判斷}。"
     origin: benchmark_distilled
@@ -102,6 +115,28 @@ test('generate-brief prints tone directive, style targets, archetype skeleton, a
     assert.match(stdout, /Apex CTA reminder: line_utm_joins/);
     assert.match(stdout, /BANS: 政治, R25/);
     assert.match(stdout, /Output is a DRAFT only\. Human posts every word\. No auto-send \(automation_policy\.mode=propose_only\)\./);
+  });
+});
+
+test('generate-brief renders primary-language style targets when a per-language map exists', async () => {
+  await withFixture(async ({ configPath, corePath, home, voicePath }) => {
+    await writeFile(voicePath, voice({ styleFingerprintByLang: true }), 'utf8');
+
+    const { stdout } = await execFileAsync(
+      process.execPath,
+      ['scripts/generate-brief.mjs', '--platform', 'threads', '--n', '1'],
+      {
+        cwd: path.join(import.meta.dirname, '..'),
+        env: { ...process.env, HOME: home, SKILL_DIR: '.claude', SOCIAL_POST_CONFIG_PATH: configPath, SOCIAL_POST_CORE_PATH: corePath },
+      },
+    );
+
+    assert.match(
+      stdout,
+      /sentence_length_bucket: short/,
+      'rendered brief should show zh-tw style targets selected from style_fingerprint_by_lang',
+    );
+    assert.match(stdout, /avg_beats: 1\.5/);
   });
 });
 
