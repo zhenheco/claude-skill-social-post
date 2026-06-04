@@ -38,6 +38,14 @@ test('classifyHook detects zh and en hook archetypes', () => {
   assert.equal(classifyHook('A quiet note without any strong opening signal'), 'other');
 });
 
+test('classifyHook detects observed English contrast and cautionary LinkedIn hooks', () => {
+  assert.equal(classifyHook('Most AI agencies are selling automation backwards.'), 'principle_contrast');
+  assert.equal(classifyHook('The most successful people I know are working less, not more.'), 'principle_contrast');
+  assert.equal(classifyHook("You don't need 100K followers. You only need 100 customers."), 'principle_contrast');
+  assert.equal(classifyHook('Are your AI agents solving problems, or just running broken processes faster?'), 'cautionary_take');
+  assert.equal(classifyHook('I stopped letting AI news run my life. It was costing me more than I realized.'), 'cautionary_take');
+});
+
 test('classifyHook detects launch verbs, truth reveals, and zh contrast fixtures', () => {
   assert.equal(classifyHook('Claude Code 出了 hooks，我今天才發現它改掉整個工作流'), 'news_hottake');
   assert.equal(classifyHook('這次看起來很順，但真相是：我前一天把整個流程重做三次'), 'vulnerability_reveal');

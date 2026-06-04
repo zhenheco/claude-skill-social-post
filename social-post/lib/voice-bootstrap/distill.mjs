@@ -20,8 +20,27 @@ function reset(patterns) {
 export function classifyHook(text) {
   const value = String(text ?? '');
   const lower = value.toLowerCase();
+  const enCommaNotWord = /\b[\w']+(?:\s+[\w']+){0,8},\s+not\s+[\w']+\b/u;
+  const enDontNeedOnlyNeed = /\byou\s+(?:do not|don't)\s+need\b.+\byou\s+only\s+need\b/u;
+  const enItsNotIts = /\bit(?:'s| is)\s+not\b.+,\s*it(?:'s| is)\b/u;
+  const enBackwards = /\b(?:selling|building|doing|using|running|approaching|teaching|learning|hiring|buying|implementing)\b.{0,80}\bbackwards\b/u;
+  const enAreYouQuestion = /^are\s+(?:you|your)\b.{12,}\?/u;
+  const enOrJustQuestion = /\bor\s+(?:just|simply)\b[^?]*\?/u;
+  const enIfYouYouAre = /\bif\s+you\b.+\byou(?:'re| are)\b/u;
+  const enStoppedCosting = /\bi\s+stopped\b.+\bit\s+was\s+costing\s+me\b/u;
   const vulnerability = [/但真相是/u, /老實說/u, /結果/u, /\bthe truth is\b/u, /\bturns out\b/u, /\bhonestly\b/u, /\bi failed\b/u];
-  const contrast = [/不是.+是/u, /其實不是/u, /底層邏輯/u, /\bnot\b.+\bit(?:'s| is)\b/u, /\bit is not\b.+\bit is\b/u];
+  const contrast = [
+    /不是.+是/u,
+    /其實不是/u,
+    /底層邏輯/u,
+    /\bnot\b.+\bit(?:'s| is)\b/u,
+    /\bit is not\b.+\bit is\b/u,
+    enBackwards,
+    enCommaNotWord,
+    /\binstead\s+of\b/u,
+    enDontNeedOnlyNeed,
+    enItsNotIts,
+  ];
   const news = [
     /(出了|推出|更新|上線|改版|發布)/u,
     /\b(dropped|just dropped|launched|released|shipped|unveiled|introduced)\b/u,
@@ -37,7 +56,11 @@ export function classifyHook(text) {
   ];
   const cautionary = [
     /(小心|警訊|如果你|不要只|風險|落後)/u,
-    /\b(if you|beware|trap|falling behind|hidden risk|outsourcing risk|do not understand)\b/u,
+    /\b(if you|beware|trap|falling behind|hidden risk|hidden cost|outsourcing risk|do not understand)\b/u,
+    enAreYouQuestion,
+    enOrJustQuestion,
+    enIfYouYouAre,
+    enStoppedCosting,
   ];
   const founderStory = [
     /(我離職|開始創業|創業|接案|現實打臉|沒有客戶)/u,
