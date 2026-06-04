@@ -65,12 +65,32 @@ test('styleFingerprint summarizes sentence length, emoji density, beats, links, 
   ]);
 
   assert.deepEqual(fp, {
-    sentence_length_bucket: 'medium',
+    // CJK-dominant mixed fixtures now use char-calibrated thresholds instead of legacy word thresholds.
+    sentence_length_bucket: 'short',
     emoji_density: 0.5,
     avg_beats: 2,
     link_rate: 0.5,
     register_hint: 'personal',
   });
+});
+
+test('styleFingerprint uses CJK length thresholds for short zh Threads posts', () => {
+  const fp = styleFingerprint([
+    post({ text: '今天把內容流程重新整理了一輪。先記錄問題，再修正最小步驟，最後才交付。' }),
+    post({ text: '這次更新看起來不大，但它讓團隊少掉兩次手動交接，節奏也更穩。' }),
+    post({ text: '我會先看驗收標準，再決定要不要自動化，否則只是把混亂跑得更快。' }),
+  ]);
+
+  assert.notEqual(fp.sentence_length_bucket, 'long');
+});
+
+test('styleFingerprint keeps latin word-count buckets unchanged', () => {
+  const fp = styleFingerprint([
+    post({ text: 'I shipped a small fix today.' }),
+    post({ text: 'The review loop is finally tighter.' }),
+  ]);
+
+  assert.equal(fp.sentence_length_bucket, 'short');
 });
 
 test('distill applies relative engagement floor, dedupes skeletons, and marks single-source patterns', () => {

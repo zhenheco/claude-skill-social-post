@@ -64,6 +64,13 @@ function apexCtas(core) {
     .flatMap((entry) => asArray(entry.metrics));
 }
 
+function languageKey(value) {
+  const text = String(value ?? '').toLowerCase();
+  if (/[\u3400-\u9fff\uf900-\ufaff]/u.test(text) || text.startsWith('zh')) return 'zh';
+  if (text.startsWith('en')) return 'en';
+  return text ? 'en' : undefined;
+}
+
 export async function loadVoiceContext(platform, options = {}) {
   const env = options.env ?? process.env;
   const normalized = assertVoicePlatform(platform);
@@ -127,11 +134,18 @@ export function pickArchetypes(brief, options = {}) {
     ...rotated.filter((name) => !recentSet.has(name)),
     ...rotated.filter((name) => recentSet.has(name)),
   ];
-  const byPattern = new Map(asArray(brief.few_shot).map((entry) => [entry.pattern, entry]));
+  const targetLanguage = languageKey(options.language ?? brief.language);
+  const byPattern = new Map();
+  for (const entry of asArray(brief.few_shot)) {
+    const entries = byPattern.get(entry.pattern) ?? [];
+    entries.push(entry);
+    byPattern.set(entry.pattern, entries);
+  }
 
   return ordered
     .map((archetype) => {
-      const entry = byPattern.get(archetype);
+      const entries = byPattern.get(archetype) ?? [];
+      const entry = entries.find((candidate) => languageKey(candidate.skeleton) === targetLanguage) ?? entries[0];
       return entry?.skeleton ? { archetype, skeleton: entry.skeleton } : null;
     })
     .filter(Boolean)

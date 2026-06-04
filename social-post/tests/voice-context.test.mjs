@@ -169,6 +169,52 @@ test('pickArchetypes prefers non-recent entries and is deterministic', async () 
   });
 });
 
+test('pickArchetypes prefers few-shot skeletons matching the brief language', () => {
+  const fewShot = [
+    {
+      pattern: 'news_hottake',
+      skeleton: '{工具} 出了 {新功能}。{反直覺判斷}。',
+    },
+    {
+      pattern: 'news_hottake',
+      skeleton: '{tool} just shipped {feature}. {contrarian take}.',
+    },
+  ];
+
+  assert.deepEqual(pickArchetypes({
+    seeded: true,
+    language: 'zh-tw',
+    hook_archetypes: ['news_hottake'],
+    few_shot: fewShot,
+  }), [
+    { archetype: 'news_hottake', skeleton: '{工具} 出了 {新功能}。{反直覺判斷}。' },
+  ]);
+  assert.deepEqual(pickArchetypes({
+    seeded: true,
+    language: 'en',
+    hook_archetypes: ['news_hottake'],
+    few_shot: fewShot,
+  }), [
+    { archetype: 'news_hottake', skeleton: '{tool} just shipped {feature}. {contrarian take}.' },
+  ]);
+});
+
+test('pickArchetypes falls back when no few-shot skeleton matches the brief language', () => {
+  assert.deepEqual(pickArchetypes({
+    seeded: true,
+    language: 'zh-tw',
+    hook_archetypes: ['news_hottake'],
+    few_shot: [
+      {
+        pattern: 'news_hottake',
+        skeleton: '{tool} just shipped {feature}. {contrarian take}.',
+      },
+    ],
+  }), [
+    { archetype: 'news_hottake', skeleton: '{tool} just shipped {feature}. {contrarian take}.' },
+  ]);
+});
+
 test('pickArchetypes returns empty when voice is unseeded', async () => {
   await withFixture(async ({ configPath, corePath, env, threadsVoice }) => {
     await writeFile(threadsVoice, voice({ fewShot: false }), 'utf8');

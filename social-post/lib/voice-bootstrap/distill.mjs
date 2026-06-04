@@ -8,6 +8,7 @@ const ENTITY_RE = /\b(?:[A-Z][A-Za-z0-9]*)(?:\s+[A-Z][A-Za-z0-9]*)*\b/gu;
 const EMOJI_RE = /\p{Extended_Pictographic}/gu;
 const PLACEHOLDER = '{placeholder}';
 const CJK_RE = /[\u3400-\u9fff\uf900-\ufaff]/u;
+const CJK_GLOBAL_RE = /[\u3400-\u9fff\uf900-\ufaff]/gu;
 
 function hasAny(text, patterns) {
   return patterns.some((pattern) => pattern.test(text));
@@ -95,13 +96,30 @@ export function skeletonize(text) {
   );
 }
 
-function sentenceUnits(text) {
-  const cjkChars = Array.from(String(text ?? '').matchAll(/[\u3400-\u9fff\uf900-\ufaff]/gu)).length;
-  if (cjkChars > 0) return cjkChars;
+function wordUnits(text) {
   return String(text ?? '').split(/\s+/u).filter(Boolean).length;
 }
 
-function bucket(avg) {
+function sentenceUnits(text, script = 'latin') {
+  if (script === 'latin') return wordUnits(text);
+  const cjkChars = Array.from(String(text ?? '').matchAll(CJK_GLOBAL_RE)).length;
+  if (cjkChars > 0) return cjkChars;
+  return wordUnits(text);
+}
+
+function dominantScript(posts) {
+  const joined = posts.map((post) => post.text).join('\n');
+  const cjkChars = Array.from(joined.matchAll(CJK_GLOBAL_RE)).length;
+  const latinWords = joined.match(/[A-Za-z0-9]+(?:['-][A-Za-z0-9]+)*/gu)?.length ?? 0;
+  return cjkChars > latinWords ? 'cjk' : 'latin';
+}
+
+function bucket(avg, script = 'latin') {
+  if (script === 'cjk') {
+    if (avg < 40) return 'short';
+    if (avg <= 100) return 'medium';
+    return 'long';
+  }
   if (avg < 8) return 'short';
   if (avg <= 24) return 'medium';
   return 'long';
@@ -129,14 +147,15 @@ export function styleFingerprint(posts = []) {
       register_hint: 'neutral',
     });
   }
-  const avgLength = rows.reduce((sum, post) => sum + sentenceUnits(post.text), 0) / rows.length;
+  const script = dominantScript(rows);
+  const avgLength = rows.reduce((sum, post) => sum + sentenceUnits(post.text, script), 0) / rows.length;
   const emojiPosts = rows.filter((post) => EMOJI_RE.test(post.text)).length;
   EMOJI_RE.lastIndex = 0;
   const linkPosts = rows.filter((post) => URL_RE.test(post.text)).length;
   URL_RE.lastIndex = 0;
   const avgBeats = rows.reduce((sum, post) => sum + beatCount(post.text), 0) / rows.length;
   return Object.freeze({
-    sentence_length_bucket: bucket(avgLength),
+    sentence_length_bucket: bucket(avgLength, script),
     emoji_density: Number((emojiPosts / rows.length).toFixed(3)),
     avg_beats: Number(avgBeats.toFixed(3)),
     link_rate: Number((linkPosts / rows.length).toFixed(3)),
