@@ -1,7 +1,8 @@
 import { secret as defaultSecret } from '../secret.mjs';
+import { loadConfig } from '../paths.mjs';
 
-const FIRECRAWL_REF = 'op://Dev/FIRECRAWL_API/credential';
 const FIRECRAWL_SCRAPE_URL = 'https://api.firecrawl.dev/v2/scrape';
+const FIRECRAWL_SECRET_KEY = 'secrets.firecrawl_api_key';
 const BLOCKED_HOSTS = Object.freeze(['linkedin.com', 'threads.com']);
 
 export class UnsupportedFirecrawlTargetError extends Error {
@@ -18,9 +19,16 @@ function assertAllowedTarget(targetUrl) {
   }
 }
 
-export async function scrapeWithFirecrawl(targetUrl, { fetch = globalThis.fetch, secret = defaultSecret } = {}) {
+function firecrawlRefFromConfig(configPath) {
+  const config = loadConfig(configPath);
+  const ref = config.secrets?.firecrawl_api_key;
+  if (!ref) throw new Error(`missing ${FIRECRAWL_SECRET_KEY} in config`);
+  return ref;
+}
+
+export async function scrapeWithFirecrawl(targetUrl, { fetch = globalThis.fetch, secret = defaultSecret, configPath } = {}) {
   assertAllowedTarget(targetUrl);
-  const token = secret(FIRECRAWL_REF);
+  const token = secret(firecrawlRefFromConfig(configPath));
   const response = await fetch(FIRECRAWL_SCRAPE_URL, {
     method: 'POST',
     headers: {

@@ -27,6 +27,18 @@ const TEMPLATES = {
     'zh-tw': '我開始 {創業/專案}。{短時間後現實打臉}：{缺口}。{學到的下一步}。',
     en: 'I started {venture or project}. {early reality check}: {missing proof or constraint}. {lesson or next move}.',
   },
+  old_new_contrast: {
+    'zh-tw': '以前 {舊做法，費時費力}。現在 {新做法，AI 槓桿}。{省下的時間或心力}。',
+    en: 'Old way: {painful manual approach}. New way: {AI-leveraged approach}. {time or effort saved}.',
+  },
+  tool_discovery: {
+    'zh-tw': '{驚嘆} {來源} 做了 {工具}，能 {反直覺能力}。{社會證明/影響}。{怎麼用}。',
+    en: '{trigger} {source} built {tool} that {counter-intuitive capability}. {social proof / impact}. {how to use it}.',
+  },
+  pov_question: {
+    'zh-tw': 'POV：{情境}。{真正的問題}？{邀請互動}。',
+    en: 'POV: {situation}. {the real question}? {invite replies}.',
+  },
 };
 
 function deepFreeze(value) {

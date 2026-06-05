@@ -29,6 +29,19 @@ export function classifyHook(text) {
   const enOrJustQuestion = /\bor\s+(?:just|simply)\b[^?]*\?/u;
   const enIfYouYouAre = /\bif\s+you\b.+\byou(?:'re| are)\b/u;
   const enStoppedCosting = /\bi\s+stopped\b.+\bit\s+was\s+costing\s+me\b/u;
+  const oldNewContrast = [
+    /\bold way\b[\s\S]{0,200}\bnew way\b/iu,
+    /(以前|過去|從前)[\s\S]{0,80}(現在|如今|now)/u,
+  ];
+  const toolDiscovery = [
+    /\b(i (found|discovered)|someone (created|built|made)|there'?s a (new )?(tool|repo|skill|app))\b/iu,
+    /(我(發現|找到)|有人(做了|寫了|開發了))[\s\S]{0,40}(工具|套件|skill|repo|功能|神器)/u,
+  ];
+  const povQuestion = [
+    /^\s*pov\s*:/iu,
+    /\b(which one would you|real question|what are you actually)\b/iu,
+    /(你會選哪|你(現在|都)用哪|說真的[，,].{0,20}哪)/u,
+  ];
   const vulnerability = [/但真相是/u, /老實說/u, /結果/u, /\bthe truth is\b/u, /\bturns out\b/u, /\bhonestly\b/u, /\bi failed\b/u];
   const contrast = [
     /不是.+是/u,
@@ -68,7 +81,21 @@ export function classifyHook(text) {
     /\b(i quit|quit my job|started|start an? .*(agency|startup|company|project)|reality hit|no clients|no case studies)\b/u,
   ];
 
-  reset([...vulnerability, ...contrast, ...news, ...milestone, ...practicalList, ...cautionary, ...founderStory]);
+  reset([
+    ...oldNewContrast,
+    ...toolDiscovery,
+    ...povQuestion,
+    ...vulnerability,
+    ...contrast,
+    ...news,
+    ...milestone,
+    ...practicalList,
+    ...cautionary,
+    ...founderStory,
+  ]);
+  if (hasAny(lower, oldNewContrast)) return 'old_new_contrast';
+  if (hasAny(lower, toolDiscovery)) return 'tool_discovery';
+  if (hasAny(lower, povQuestion)) return 'pov_question';
   if (hasAny(lower, vulnerability)) return 'vulnerability_reveal';
   if (hasAny(lower, contrast)) return 'principle_contrast';
   if (hasAny(lower, news)) return 'news_hottake';
