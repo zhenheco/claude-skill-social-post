@@ -67,6 +67,52 @@ test('firecrawl adapter uses injected fetch and secret for allowed targets', asy
   assert.match(calls[1][3], /https:\/\/example\.com\/post/);
 });
 
+test('firecrawl adapter forwards render wait and main-content options', async () => {
+  const configPath = await configWith('secrets:\n  firecrawl_api_key: op://Dev/FIRECRAWL_API/credential\n');
+  let body;
+
+  await scrapeWithFirecrawl('https://example.com/blogspot-post', {
+    configPath,
+    secret: () => 'FAKE_TOKEN',
+    waitFor: 4000,
+    onlyMainContent: false,
+    fetch: async (_url, init) => {
+      body = JSON.parse(init.body);
+      return {
+        ok: true,
+        json: async () => ({ data: { markdown: 'rendered post text' } }),
+      };
+    },
+  });
+
+  assert.deepEqual(body, {
+    url: 'https://example.com/blogspot-post',
+    formats: ['markdown'],
+    waitFor: 4000,
+    onlyMainContent: false,
+  });
+});
+
+test('firecrawl adapter defaults to waitFor 4000 and full-page content', async () => {
+  const configPath = await configWith('secrets:\n  firecrawl_api_key: op://Dev/FIRECRAWL_API/credential\n');
+  let body;
+
+  await scrapeWithFirecrawl('https://example.com/defaults', {
+    configPath,
+    secret: () => 'FAKE_TOKEN',
+    fetch: async (_url, init) => {
+      body = JSON.parse(init.body);
+      return {
+        ok: true,
+        json: async () => ({ data: { markdown: 'rendered post text' } }),
+      };
+    },
+  });
+
+  assert.equal(body.waitFor, 4000);
+  assert.equal(body.onlyMainContent, false);
+});
+
 test('firecrawl adapter throws a clear config error when firecrawl secret ref is absent', async () => {
   const configPath = await configWith('secrets:\n  other_key: op://Dev/OTHER/credential\n');
 

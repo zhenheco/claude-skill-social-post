@@ -70,7 +70,7 @@ export function secret(value, { runner = defaultRunner } = {}) {
   if (value === '') throw opReferenceErrorForEmptyInput();
   if (!isOpRef(value)) throw new Error('secret value must be an op reference');
   const ref = value;
-  const result = runner(['op', 'read', ref, '--vault', vaultOf(ref)]);
+  const result = runner(['op', 'read', ref]);
   if (result?.status !== 0) throw new Error(`op read failed for ${ref}`);
   return String(result?.stdout ?? '').trim();
 }

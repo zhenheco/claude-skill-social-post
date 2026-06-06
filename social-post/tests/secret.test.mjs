@@ -33,12 +33,21 @@ test('T1 secret rejects raw or malformed values without echoing them', () => {
   }
 });
 
-test('T2 secret resolves an op reference through injected array-form op read with explicit vault', () => {
+test('T2 secret resolves an op reference through injected array-form op read', () => {
   const spy = spyRunner();
   const value = secret('op://Dev/Postiz API Key/credential', { runner: spy.runner });
 
   assert.equal(value, 'FAKE_TOKEN');
-  assert.deepEqual(spy.calls[0], ['op', 'read', 'op://Dev/Postiz API Key/credential', '--vault', 'Dev']);
+  assert.deepEqual(spy.calls[0], ['op', 'read', 'op://Dev/Postiz API Key/credential']);
+});
+
+test('T2b secret passes op refs with section spaces as one unchanged arg', () => {
+  const spy = spyRunner();
+  const ref = 'op://Dev/FIRECRAWL_API/add more/jgu53abc';
+  const value = secret(ref, { runner: spy.runner });
+
+  assert.equal(value, 'FAKE_TOKEN');
+  assert.deepEqual(spy.calls[0], ['op', 'read', ref]);
 });
 
 test('T3 secret surfaces op failure without leaking output bytes', () => {
@@ -113,7 +122,7 @@ test('T8 vaultOf validates refs and source keeps array-form spawn without shell 
   const source = await readFile(new URL('../lib/secret.mjs', import.meta.url), 'utf8');
   assert.match(source, /spawnSync\('op', argv\.slice\(1\)/);
   assert.doesNotMatch(source, /shell:\s*true/);
-  assert.match(source, /'--vault'/);
+  assert.doesNotMatch(source, /'--vault'/);
 });
 
 test('T9 integration guard accepts a clean real-shaped config fixture', async () => {

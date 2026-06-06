@@ -22,18 +22,22 @@ export function expandTemplate(template, vars = {}) {
 
 function parseScalar(value) {
   const trimmed = value.trim();
-  if (trimmed === '') return {};
-  if (trimmed === 'null') return null;
-  if (trimmed === 'true') return true;
-  if (trimmed === 'false') return false;
-  if (trimmed === '[]') return [];
-  if (trimmed.startsWith('[') && trimmed.endsWith(']')) {
-    const inner = trimmed.slice(1, -1).trim();
+  const quote = trimmed[0];
+  const scalar = quote && (quote === '"' || quote === "'") && trimmed.endsWith(quote)
+    ? trimmed.slice(1, -1)
+    : trimmed;
+  if (scalar === '') return {};
+  if (scalar === 'null') return null;
+  if (scalar === 'true') return true;
+  if (scalar === 'false') return false;
+  if (scalar === '[]') return [];
+  if (scalar.startsWith('[') && scalar.endsWith(']')) {
+    const inner = scalar.slice(1, -1).trim();
     if (!inner) return [];
     return inner.split(',').map((item) => parseScalar(item));
   }
-  if (/^-?\d+(\.\d+)?$/.test(trimmed)) return Number(trimmed);
-  return trimmed;
+  if (/^-?\d+(\.\d+)?$/.test(scalar)) return Number(scalar);
+  return scalar;
 }
 
 function parseYamlSubset(content) {

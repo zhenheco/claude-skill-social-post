@@ -157,3 +157,23 @@ test('T9 real config reuses prediction-distill state locations', () => {
   assert.equal(resolve('predictions', 'facebook').lane, 'social-facebook');
   assert.equal(resolve('decisions').path, path.join(os.homedir(), '.claude/state/digest-decisions.json'));
 });
+
+test('T10 loadConfig strips one outer quote pair from plain strings before validation', async () => {
+  await withTempConfig(async ({ configPath }) => {
+    await writeFile(
+      configPath,
+      `${goodConfig}secrets:
+  quoted_firecrawl_api_key: "op://Dev/X/y z/f"
+  unquoted_firecrawl_api_key: op://Dev/X/y z/f
+`,
+      'utf8',
+    );
+
+    const config = loadConfig(configPath);
+    assert.equal(config.secrets.quoted_firecrawl_api_key, 'op://Dev/X/y z/f');
+    assert.equal(config.secrets.unquoted_firecrawl_api_key, 'op://Dev/X/y z/f');
+
+    await writeFile(configPath, `${goodConfig}quoted_path: "/Users/example/leak"\n`, 'utf8');
+    assert.throws(() => loadConfig(configPath), HardcodedAbsoluteError);
+  });
+});

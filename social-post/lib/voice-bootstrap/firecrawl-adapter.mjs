@@ -26,7 +26,10 @@ function firecrawlRefFromConfig(configPath) {
   return ref;
 }
 
-export async function scrapeWithFirecrawl(targetUrl, { fetch = globalThis.fetch, secret = defaultSecret, configPath } = {}) {
+export async function scrapeWithFirecrawl(
+  targetUrl,
+  { fetch = globalThis.fetch, secret = defaultSecret, configPath, waitFor = 4000, onlyMainContent = false } = {},
+) {
   assertAllowedTarget(targetUrl);
   const token = secret(firecrawlRefFromConfig(configPath));
   const response = await fetch(FIRECRAWL_SCRAPE_URL, {
@@ -35,7 +38,7 @@ export async function scrapeWithFirecrawl(targetUrl, { fetch = globalThis.fetch,
       authorization: `Bearer ${token}`,
       'content-type': 'application/json',
     },
-    body: JSON.stringify({ url: targetUrl, formats: ['markdown'] }),
+    body: JSON.stringify({ url: targetUrl, formats: ['markdown'], waitFor, onlyMainContent }),
   });
   if (!response?.ok) throw new Error(`firecrawl scrape failed: ${response?.status ?? 'unknown'}`);
   const payload = await response.json();

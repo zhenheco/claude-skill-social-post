@@ -31,7 +31,7 @@ function list(value) {
   return Array.isArray(value) && value.length ? value.join(', ') : 'none';
 }
 
-function renderBrief(brief, chosen, topic) {
+export function renderBrief(brief, chosen, topic) {
   const style = brief.style_fingerprint ?? {};
   const directive = brief.voice_directive ?? {};
   const lines = [
