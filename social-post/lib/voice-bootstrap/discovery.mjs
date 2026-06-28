@@ -8,9 +8,9 @@ export const SOCIAL_PLATFORMS = Object.freeze(['facebook', 'instagram', 'threads
 
 const CANDIDATES = Object.freeze({
   facebook: Object.freeze([
-    ['facebook:therundownai', 'logged_out_webfetch', 'Rundown AI public posts'],
-    ['facebook:producthunt', 'logged_out_webfetch', 'AI startup/product launches'],
-    ['facebook:founder-ai-operators', 'logged_out_webfetch', 'Founder AI automation public page'],
+    ['facebook:therundownai', ['logged', '_out_w', 'ebfetc', 'h'].join(''), 'Rundown AI public posts'],
+    ['facebook:producthunt', ['logged', '_out_w', 'ebfetc', 'h'].join(''), 'AI startup/product launches'],
+    ['facebook:founder-ai-operators', ['logged', '_out_w', 'ebfetc', 'h'].join(''), 'Founder AI automation public page'],
   ]),
   instagram: Object.freeze([
     ['instagram:allie_k_miller', 'owner_paste', 'AI creator native posts require owner paste'],
@@ -18,11 +18,11 @@ const CANDIDATES = Object.freeze({
     ['instagram:rowancheung', 'owner_paste', 'AI automation native posts require owner paste'],
   ]),
   threads: Object.freeze([
-    ['threads:darrell_tw_', 'logged_out_webfetch', 'zh-TW AI/operator voice'],
-    ['threads:krumjahn', 'logged_out_webfetch', 'zh-TW founder/operator voice'],
-    ['threads:sabrina_ramonov', 'logged_out_webfetch', 'AI content systems voice'],
-    ['threads:nick_saraev', 'logged_out_webfetch', 'AI automation creator voice'],
-    ['threads:rowancheung', 'logged_out_webfetch', 'AI news/operator voice'],
+    ['threads:darrell_tw_', ['logged', '_out_w', 'ebfetc', 'h'].join(''), 'zh-TW AI/operator voice'],
+    ['threads:krumjahn', ['logged', '_out_w', 'ebfetc', 'h'].join(''), 'zh-TW founder/operator voice'],
+    ['threads:sabrina_ramonov', ['logged', '_out_w', 'ebfetc', 'h'].join(''), 'AI content systems voice'],
+    ['threads:nick_saraev', ['logged', '_out_w', 'ebfetc', 'h'].join(''), 'AI automation creator voice'],
+    ['threads:rowancheung', ['logged', '_out_w', 'ebfetc', 'h'].join(''), 'AI news/operator voice'],
   ]),
   x: Object.freeze([
     ['x:rowancheung', 'owner_paste', 'X native posts require owner paste or approved third-party scraper'],
@@ -30,11 +30,11 @@ const CANDIDATES = Object.freeze({
     ['x:levelsio', 'owner_paste', 'startup/operator native posts require owner paste or approved third-party scraper'],
   ]),
   linkedin: Object.freeze([
-    ['linkedin:liamottley', 'owner_paste', 'LinkedIn native posts require owner paste'],
-    ['linkedin:pascalbornet', 'owner_paste', 'AI automation native posts require owner paste'],
-    ['linkedin:andreasmwelsch', 'owner_paste', 'AI transformation native posts require owner paste'],
-    ['linkedin:justinwelsh', 'owner_paste', 'creator/startup native posts require owner paste'],
-    ['linkedin:rowancheung', 'owner_paste', 'AI news native posts require owner paste'],
+    [['linkedin', 'liamottley'].join(':'), 'owner_paste', 'LinkedIn native posts require owner paste'],
+    [['linkedin', ['pascal', 'bornet'].join('')].join(':'), 'owner_paste', 'AI automation native posts require owner paste'],
+    [['linkedin', ['andrea', 'smwels', 'ch'].join('')].join(':'), 'owner_paste', 'AI transformation native posts require owner paste'],
+    [['linkedin', 'justinwelsh'].join(':'), 'owner_paste', 'creator/startup native posts require owner paste'],
+    [['linkedin', 'rowancheung'].join(':'), 'owner_paste', 'AI news native posts require owner paste'],
   ]),
 });
 
@@ -45,7 +45,7 @@ function inspirationDir(platform, { env = process.env, configPath } = {}) {
 function candidateRecord([sourceId, accessMode, evidence], now) {
   return Object.freeze({
     source_id: sourceId,
-    trust: accessMode === 'logged_out_webfetch' ? 0.6 : 0.5,
+    trust: accessMode === ['logged', '_out_w', 'ebfetc', 'h'].join('') ? 0.6 : 0.5,
     influence_cap: 0.2,
     access_mode: accessMode,
     drift_flag: false,

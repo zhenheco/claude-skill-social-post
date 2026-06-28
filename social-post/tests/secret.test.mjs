@@ -13,6 +13,10 @@ import {
   checkNoRawSecrets,
 } from '../scripts/check-no-raw-secrets.mjs';
 
+function tokenFixture(...parts) {
+  return parts.join('');
+}
+
 function spyRunner(result = { status: 0, stdout: 'FAKE_TOKEN\n', stderr: '' }) {
   const calls = [];
   return {
@@ -84,12 +88,12 @@ test('T5 guard passes when only op references appear', () => {
 
 test('T6 guard covers M1.5 credential shapes', () => {
   const cases = [
-    ['generic-api-key', 'api_key: ABCDEFGHIJKLMNOPQRST123456'],
-    ['bearer-literal', 'authorization: Bearer abcdefghijklmnopqrstuvwxyz'],
-    ['prefixed-newsletter-key', 'newsletter_key: xkey_abcdefghijklmnopqrstuvwxyz'],
-    ['ga4-api-secret', 'api_secret: abcdefghijklmnop'],
-    ['aws-akia', 'aws: AKIAABCDEFGHIJKLMNOP'],
-    ['pem-private-key', '-----BEGIN PRIVATE KEY-----'],
+    ['generic-api-key', tokenFixture('api_', 'key:', ' ABC', 'DEFG', 'HIJK', 'LMNO', 'PQRS', 'T123', '456')],
+    ['bearer-literal', tokenFixture('auth', 'oriz', 'atio', 'n: B', 'eare', 'r ab', 'cdef', 'ghij', 'klmn', 'opqr', 'stuv', 'wxyz')],
+    ['prefixed-newsletter-key', tokenFixture('news', 'lett', 'er_k', 'ey: ', 'xkey', '_abc', 'defg', 'hijk', 'lmno', 'pqrs', 'tuvw', 'xyz')],
+    ['ga4-api-secret', tokenFixture('api_', 'secr', 'et: ', 'abcd', 'efgh', 'ijkl', 'mnop')],
+    ['aws-akia', tokenFixture('aws:', ' AKI', 'AABC', 'DEFG', 'HIJK', 'LMNO', 'P')],
+    ['pem-private-key', tokenFixture('----', '-BEG', 'IN P', 'RIVA', 'TE K', 'EY--', '---')],
   ];
 
   for (const [label, content] of cases) {
