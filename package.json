@@ -1,0 +1,9 @@
+{
+  "name": "claude-skill-social-post-workspace",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "npm --prefix social-post test",
+    "check": "npm test"
+  }
+}

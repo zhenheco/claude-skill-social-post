@@ -57,29 +57,50 @@ function renderCharts() {
   });
 }
 
+function element(tag, options = {}, children = []) {
+  const node = document.createElement(tag);
+  if (options.className) node.className = options.className;
+  if (options.text !== undefined) node.textContent = String(options.text);
+  if (options.dataset) {
+    for (const [key, value] of Object.entries(options.dataset)) {
+      node.dataset[key] = value == null ? '' : String(value);
+    }
+  }
+  for (const child of children) {
+    node.append(child);
+  }
+  return node;
+}
+
+function emptyItem(message) {
+  return element('div', { className: 'item', text: message });
+}
+
 function scorePill(name, score) {
-  return `<span class="pill">${name}: ${score?.value ?? '無資料'}</span>`;
+  return element('span', { className: 'pill', text: `${name}: ${score?.value ?? '無資料'}` });
 }
 
 function renderProposals() {
   const host = document.querySelector('[data-list="proposals"]');
   if (!host) return;
-  host.innerHTML = (vm.proposals || []).map((proposal) => `
-    <article class="item">
-      <div class="item-title">${proposal.platform} · ${proposal.kind} · ${proposal.id}</div>
-      <div class="meta">${proposal.hard_no_auto_apply ? '強制禁止自動套用 · ' : ''}${proposal.hard_no_auto_apply_reason || '已有轉換證據'}</div>
-      <div class="score-row">
-        ${scorePill('傳播', proposal.scores.distribution)}
-        ${scorePill('互動品質', proposal.scores.engagement_quality)}
-        ${scorePill('轉換代理', proposal.scores.conversion_proxy)}
-      </div>
-      <div class="actions">
-        <button data-decision="accept" data-category="${proposal.category}" data-id="${proposal.id}">採用</button>
-        <button data-decision="reject" data-category="${proposal.category}" data-id="${proposal.id}">駁回</button>
-        <button data-decision="snooze" data-category="${proposal.category}" data-id="${proposal.id}">稍後</button>
-      </div>
-    </article>
-  `).join('') || '<div class="item">沒有待審提案。</div>';
+  const items = (vm.proposals || []).map((proposal) => {
+    const meta = `${proposal.hard_no_auto_apply ? '強制禁止自動套用 · ' : ''}${proposal.hard_no_auto_apply_reason || '已有轉換證據'}`;
+    return element('article', { className: 'item' }, [
+      element('div', { className: 'item-title', text: `${proposal.platform} · ${proposal.kind} · ${proposal.id}` }),
+      element('div', { className: 'meta', text: meta }),
+      element('div', { className: 'score-row' }, [
+        scorePill('傳播', proposal.scores.distribution),
+        scorePill('互動品質', proposal.scores.engagement_quality),
+        scorePill('轉換代理', proposal.scores.conversion_proxy),
+      ]),
+      element('div', { className: 'actions' }, [
+        element('button', { text: '採用', dataset: { decision: 'accept', category: proposal.category, id: proposal.id } }),
+        element('button', { text: '駁回', dataset: { decision: 'reject', category: proposal.category, id: proposal.id } }),
+        element('button', { text: '稍後', dataset: { decision: 'snooze', category: proposal.category, id: proposal.id } }),
+      ]),
+    ]);
+  });
+  host.replaceChildren(...(items.length ? items : [emptyItem('沒有待審提案。')]));
 }
 
 function bindProposalButtons() {
@@ -103,28 +124,33 @@ function bindProposalButtons() {
 function renderInspiration() {
   const host = document.querySelector('[data-list="inspiration"]');
   if (!host) return;
-  host.innerHTML = (vm.inspiration || []).map((item) => `
-    <article class="item">
-      <div class="item-title">${item.platform} · ${item.id}</div>
-      <p>${item.abstracted_template}</p>
-      <div class="meta">原創性 ${item.originality_score ?? '無資料'} · 比對片段 ${item.matched_span || '無'}</div>
-    </article>
-  `).join('') || '<div class="item">沒有外部靈感項目。</div>';
+  const items = (vm.inspiration || []).map((item) =>
+    element('article', { className: 'item' }, [
+      element('div', { className: 'item-title', text: `${item.platform} · ${item.id}` }),
+      element('p', { text: item.abstracted_template }),
+      element('div', { className: 'meta', text: `原創性 ${item.originality_score ?? '無資料'} · 比對片段 ${item.matched_span || '無'}` }),
+    ]),
+  );
+  host.replaceChildren(...(items.length ? items : [emptyItem('沒有外部靈感項目。')]));
 }
 
 function renderEvolution() {
   const host = document.querySelector('[data-list="evolution"]');
   if (!host) return;
-  host.innerHTML = (vm.evolutionLog || []).map((item) => `
-    <article class="item">
-      <div class="item-title">${item.category}</div>
-      <div class="meta">${item.accepted} 已採用 · ${item.rejected} 已駁回 · ${item.snoozed} 已稍後</div>
-    </article>
-  `).join('') || '<div class="item">尚無稽核決策。</div>';
+  const items = (vm.evolutionLog || []).map((item) =>
+    element('article', { className: 'item' }, [
+      element('div', { className: 'item-title', text: item.category }),
+      element('div', { className: 'meta', text: `${item.accepted} 已採用 · ${item.rejected} 已駁回 · ${item.snoozed} 已稍後` }),
+    ]),
+  );
+  host.replaceChildren(...(items.length ? items : [emptyItem('尚無稽核決策。')]));
 }
 
 function metric(label, value) {
-  return `<div class="metric"><strong>${value}</strong><span>${label}</span></div>`;
+  return element('div', { className: 'metric' }, [
+    element('strong', { text: value }),
+    element('span', { text: label }),
+  ]);
 }
 
 function renderShare() {
@@ -132,31 +158,31 @@ function renderShare() {
   const overall = document.getElementById('share-overall-card');
   const platform = document.getElementById('share-platform-card');
   if (overall) {
-    overall.innerHTML = `
-      <h2>整體每週卡片</h2>
-      <div class="metric-grid">
-        ${metric('觸及', shareData.overall.weekly.reach)}
-        ${metric('互動', shareData.overall.weekly.engagement)}
-        ${metric('轉換代理', shareData.overall.weekly.conversion_proxy)}
-        ${metric('每次瀏覽', shareData.overall.weekly.per_view.toFixed(2))}
-      </div>
-    `;
+    overall.replaceChildren(
+      element('h2', { text: '整體每週卡片' }),
+      element('div', { className: 'metric-grid' }, [
+        metric('觸及', shareData.overall.weekly.reach),
+        metric('互動', shareData.overall.weekly.engagement),
+        metric('轉換代理', shareData.overall.weekly.conversion_proxy),
+        metric('每次瀏覽', shareData.overall.weekly.per_view.toFixed(2)),
+      ]),
+    );
   }
   if (platform) {
-    platform.innerHTML = `
-      <h2>各平台每週卡片</h2>
-      ${(shareData.perPlatform || []).map((card) => `
-        <article class="item">
-          <div class="item-title">${card.platform}</div>
-          <div class="score-row">
-            ${metric('觸及', card.weekly.reach)}
-            ${metric('互動', card.weekly.engagement)}
-            ${metric('轉換代理', card.weekly.conversion_proxy)}
-            ${metric('每次瀏覽', card.weekly.per_view.toFixed(2))}
-          </div>
-        </article>
-      `).join('')}
-    `;
+    platform.replaceChildren(
+      element('h2', { text: '各平台每週卡片' }),
+      ...(shareData.perPlatform || []).map((card) =>
+        element('article', { className: 'item' }, [
+          element('div', { className: 'item-title', text: card.platform }),
+          element('div', { className: 'score-row' }, [
+            metric('觸及', card.weekly.reach),
+            metric('互動', card.weekly.engagement),
+            metric('轉換代理', card.weekly.conversion_proxy),
+            metric('每次瀏覽', card.weekly.per_view.toFixed(2)),
+          ]),
+        ]),
+      ),
+    );
   }
 }
 
