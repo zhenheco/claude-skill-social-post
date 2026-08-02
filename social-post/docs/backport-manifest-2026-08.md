@@ -39,12 +39,12 @@ The diff reported 31 relative-path differences:
 | social-post/F19_DEPLOYMENT_KIT.md | Canonical public deployment documentation; required by the canonical SKILL reference. |
 | social-post/SKILL.md | Sync repaired routing, safety, and current public skill contract. |
 | social-post/content_plan.example.md | Sync the generic, non-personal public example; the live plan itself remains excluded. |
-| social-post/dashboard/static/dashboard.js | Sync the canonical dashboard data/view contract while retaining the repo's existing DOM-safe renderer; the canonical string-HTML renderer fails the repo-only public audit gate, so this security-preserving implementation is the required backport form. |
+| social-post/dashboard/static/dashboard.js | verified parity, no bytes moved; retain the repo's existing DOM-safe renderer because the canonical string-HTML renderer fails the repo-only public audit gate. |
 | social-post/lib/material/flywheel-articles.mjs | Restore the flywheel-material bridge required by the current brief pipeline. |
 | social-post/lib/posting/image-gen.mjs | Sync with post.mjs as one dependency-closed posting batch. |
 | social-post/lib/posting/postiz-adapter.mjs | Sync the Postiz adapter with the vault registry and posting CLI. |
 | social-post/lib/registry.mjs | D9 explicitly requires the vault registry and same-batch adapter. |
-| social-post/lib/voice-bootstrap/discovery.mjs | Special sync: take canonical syntax/structure, then preserve the repo's current redacted fixture expressions. |
+| social-post/lib/voice-bootstrap/discovery.mjs | verified parity, no bytes moved; preserve the repo's current redacted fixture expressions and syntax-safe implementation. |
 | social-post/references/case_studies.md | Sync canonical public reference content. |
 | social-post/references/evaluation.md | Sync canonical public evaluation guidance. |
 | social-post/references/facebook.md | Sync canonical public platform guidance. |
@@ -86,6 +86,17 @@ The diff reported 31 relative-path differences:
 There is no token-bearing file in the diff set. brand.example.yaml,
 style_profile.example.md, and schemas/core.yaml are public examples/schema
 files and are not excluded by this manifest.
+
+## Review findings (2026-08-03, pre-existing backlog, not fixed in this round)
+
+- Postiz `op://` key references are resolved per request instead of at client construction time — `social-post/lib/posting/postiz-adapter.mjs:56-60, 93-97`.
+- Threads has no provider-specific payload compatibility path in the generic schedule payload builder — `social-post/lib/posting/postiz-adapter.mjs:158-184`.
+- The CLI posting path calls scheduling directly and can bypass the registry/freeze guard — `social-post/scripts/post.mjs:54-75`.
+- Channel discovery catches and suppresses live-integration challenge signals instead of propagating them — `social-post/scripts/post.mjs:102-104, 124-128`.
+- A challenge during media upload is treated as a generic upload failure, so the CLI continues and drops the image — `social-post/lib/posting/postiz-adapter.mjs:93-108; social-post/scripts/post.mjs:67-72`.
+- The boundary scanner does not cover injected-argument invocation forms — `social-post/scripts/check-no-raw-secrets.mjs:52-69; social-post/tests/audit-gates.test.mjs`.
+
+These are verified as pre-existing behavior byte-identical with the vault canonical source, not regressions introduced by this backport.
 
 ## Discovery three-way guard
 

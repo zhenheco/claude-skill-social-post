@@ -20,7 +20,7 @@ test('post CLI continues with text posting when lazy image generation fails', as
         throw new Error('codex unavailable');
       },
       createClient: () => ({
-        listIntegrations: async () => [{ identifier: 'x', name: 'Jou Nelson', id: 'x-channel', disabled: false }],
+        listIntegrations: async () => [{ identifier: 'x', name: 'test account', id: 'x-channel', disabled: false }],
         createPost: async (payload) => {
           payloads.push(payload);
           return { id: 'post-1' };
@@ -75,7 +75,7 @@ test('post CLI --dry-run generates image and previews payload without uploading 
       console: { log: (line) => output.push(line), error: () => {} },
       generateImage: async () => { generated = true; return { pngPath: path.join(dir, 'assets/draft.png') }; },
       createClient: () => ({
-        listIntegrations: async () => [{ identifier: 'x', name: 'Jou Nelson', id: 'x-channel', disabled: false }],
+        listIntegrations: async () => [{ identifier: 'x', name: 'test account', id: 'x-channel', disabled: false }],
         uploadMedia: async () => { uploadCalled = true; return { id: 'm', path: 'p' }; },
         createPost: async () => { createPostCalled = true; return { id: 'post-1' }; },
       }),
@@ -107,7 +107,7 @@ test('post CLI --image-path reuses a pre-generated image without regenerating', 
       console: { log: () => {}, error: () => {} },
       generateImage: async () => { generated = true; return { pngPath: 'WRONG' }; },
       createClient: () => ({
-        listIntegrations: async () => [{ identifier: 'x', name: 'Jou Nelson', id: 'x-channel', disabled: false }],
+        listIntegrations: async () => [{ identifier: 'x', name: 'test account', id: 'x-channel', disabled: false }],
         uploadMedia: async (p) => { uploadedPath = p; return { id: 'm', path: 'p' }; },
         createPost: async (payload) => { payloads.push(payload); return { id: 'post-1' }; },
       }),
