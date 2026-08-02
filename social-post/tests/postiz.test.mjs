@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { mkdtemp, readFile, rm } from 'node:fs/promises';
+import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import test from 'node:test';
@@ -12,6 +12,9 @@ import {
   UnsupportedMechanismError,
   createClient,
   post,
+  schedulePost,
+  splitForX,
+  taipeiWallClockISO,
 } from '../lib/posting/postiz-adapter.mjs';
 
 function registry(mechanism = 'postiz_official_api') {
@@ -50,6 +53,105 @@ test('Postiz createClient posts LinkedIn via public v1 posts with Authorization 
   assert.equal(result.post_id, 'post-1');
   assert.match(calls[0].url, /https:\/\/api\.postiz\.com\/public\/v1\/posts$/);
   assert.equal(calls[0].init.headers.Authorization, 'TEST');
+});
+
+test('Postiz createClient uploads media via multipart public v1 upload endpoint', async () => {
+  const dir = await mkdtemp(path.join(os.tmpdir(), 'postiz-upload-'));
+  const pngPath = path.join(dir, 'media.png');
+  await writeFile(pngPath, 'png', 'utf8');
+  const calls = [];
+  try {
+    const client = createClient({
+      env: { POSTIZ_API_KEY: 'TEST' },
+      fetchImpl: async (url, init) => {
+        calls.push({ url: String(url), init });
+        return { ok: true, status: 200, json: async () => ({ id: 'media-1', path: 'https://uploads.postiz.com/media.png' }) };
+      },
+    });
+
+    const media = await client.uploadMedia(pngPath);
+
+    assert.deepEqual(media, { id: 'media-1', path: 'https://uploads.postiz.com/media.png' });
+    assert.match(calls[0].url, /https:\/\/api\.postiz\.com\/public\/v1\/upload$/);
+    assert.equal(calls[0].init.method, 'POST');
+    assert.equal(calls[0].init.headers.Authorization, 'TEST');
+    assert.ok(calls[0].init.body instanceof FormData);
+    assert.equal(calls[0].init.body.has('file'), true);
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
+test('taipeiWallClockISO converts a Taipei wall-clock time to the correct UTC (TW-8h) Postiz date', () => {
+  // Postiz interprets `date` as UTC; 17:00 Taipei = 09:00 UTC same day.
+  assert.equal(taipeiWallClockISO(new Date('2026-06-09T00:00:00.000Z'), '17:00'), '2026-06-09T09:00:00.000Z');
+  // date arg resolves to Taipei calendar day 2027-01-01; 09:30 Taipei = 01:30 UTC same day.
+  assert.equal(taipeiWallClockISO(new Date('2026-12-31T20:00:00.000Z'), '09:30'), '2027-01-01T01:30:00.000Z');
+});
+
+test('splitForX preserves order without empty segments or over-limit tweets', () => {
+  const paragraph = 'First paragraph has a clear sentence boundary for X splitting. '.repeat(4).trim();
+  const second = 'Second paragraph is also long enough to require a thread while preserving words. '.repeat(4).trim();
+  const segments = splitForX(`${paragraph}\n\n${second}`, 180);
+
+  assert.ok(segments.length > 1);
+  assert.equal(segments.some((segment) => segment.length > 180), false);
+  assert.equal(segments.some((segment) => segment.length === 0), false);
+  assert.equal(segments.join('\n\n').replace(/\s+/g, ' '), `${paragraph} ${second}`.replace(/\s+/g, ' '));
+  for (const segment of segments) {
+    assert.doesNotMatch(segment, /^\s|\s$/);
+  }
+});
+
+test('schedulePost builds X native thread payload with settings and image array', async () => {
+  const calls = [];
+  const client = { createPost: async (payload) => (calls.push(payload), { id: 'post-1' }) };
+  const mediaObjs = [{ id: 'media-1', path: 'https://uploads.postiz.com/media.png' }];
+
+  const result = await schedulePost({
+    platform: 'x',
+    channelId: 'x-channel',
+    segments: ['tweet one', 'tweet two'],
+    date: '2026-06-09T17:00:00.000Z',
+    type: 'schedule',
+    mediaObjs,
+    client,
+  });
+
+  assert.deepEqual(result, { id: 'post-1' });
+  assert.deepEqual(calls[0], {
+    type: 'schedule',
+    date: '2026-06-09T17:00:00.000Z',
+    shortLink: false,
+    tags: [],
+    posts: [{
+      integration: { id: 'x-channel' },
+      value: [
+        { content: 'tweet one', image: mediaObjs },
+        { content: 'tweet two', image: mediaObjs },
+      ],
+      settings: { __type: 'x', who_can_reply_post: 'everyone' },
+    }],
+  });
+});
+
+test('schedulePost keeps non-X platforms as a single value entry with provider settings', async () => {
+  const calls = [];
+  const client = { createPost: async (payload) => (calls.push(payload), { id: 'post-1' }) };
+  const mediaObjs = [{ id: 'media-1', path: 'https://uploads.postiz.com/media.png' }];
+
+  await schedulePost({
+    platform: 'threads',
+    channelId: 'threads-channel',
+    segments: ['first', 'second'],
+    date: '2026-06-09T17:00:00.000Z',
+    type: 'now',
+    mediaObjs,
+    client,
+  });
+
+  assert.deepEqual(calls[0].posts[0].value, [{ content: 'first\n\nsecond', image: mediaObjs }]);
+  assert.deepEqual(calls[0].posts[0].settings, { __type: 'threads' });
 });
 
 test('Postiz post supports X text and LinkedIn PDF carousel through the same injected client', async () => {
@@ -105,9 +207,16 @@ test('Postiz source boundary has env secret read only, no browser DOM, no raw ke
   const homePathLiteral = new RegExp('/(' + ['Users', 'home'].join('|') + ')/');
   const rawSecret = new RegExp([['s', 'k', '-'].join(''), ['A', 'K', 'I', 'A'].join(''), ['-----', 'BEGIN'].join('')].join('|'));
 
-  assert.equal(POSTIZ_KEY_REF, 'op://Dev/Postiz API Key');
+  assert.equal(POSTIZ_KEY_REF, 'op://Dev/Postiz API Key/credential');
   assert.match(source, /POSTIZ_API_KEY/);
   assert.doesNotMatch(source, /mcp__claude-in-chrome__|click\s*\(|document\.|querySelector|op item|get.*reveal/i);
   assert.doesNotMatch(source, homePathLiteral);
   assert.doesNotMatch(source, rawSecret);
+});
+
+test('Postiz live integration lists integrations when explicitly enabled', { skip: process.env.RUN_POSTIZ_LIVE !== '1' }, async () => {
+  const client = createClient({ fetchImpl: globalThis.fetch });
+  const integrations = await client.listIntegrations();
+
+  assert.equal(Array.isArray(integrations), true);
 });

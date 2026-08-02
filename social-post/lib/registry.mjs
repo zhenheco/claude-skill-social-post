@@ -45,7 +45,7 @@ const DEFAULT_REGISTRY = deepFreeze({
   },
   threads: {
     access_mode: 'broadcast',
-    posting_mechanism: 'browser_attended_draft_1click',
+    posting_mechanism: 'postiz_official_api',
     language_stack: 'zh',
   },
   linkedin: {

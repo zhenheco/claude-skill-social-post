@@ -12,6 +12,22 @@ fork 自 `Hao0321/claude-skill-social-post`。把個人語氣來源從 skill 內
 - README / `docs/setup.md` 安裝步驟改為 `cp brand.example.yaml → CC Cli`
 - 語氣檔脫離 repo（在 CC Cli），開源同步時天然不外洩個人 voice
 
+## post-fork-1.0.0 → e233d07 + D9 backport — 2026-08-03
+
+fork-1.0.0（2026-06-03）之後至 e233d07 的功能累積，以及本次 r5 D9
+public backport：
+
+- 新增唯讀 dashboard 與 dashboard view/server CLI。
+- 新增 voice-bootstrap-distill：benchmark 蒸餾、archetype/coverage/originality
+  gates、seed 與多語言 voice fingerprint。
+- 新增 newsletter/beehiiv、vocus、Dev.to draft adapters 與 attribution
+  mesh/UTM；保留 draft/propose-only 邊界。
+- 新增 secrets-op boundary、registry/exclude-list、跨語言 transcreate 與
+  flywheel/metrics/prediction 支援。
+- Backport 多模型時代的 posting CLI、Postiz adapter、image-gen 與 flywheel
+  素材橋；channels.json 改為 optional fallback，優先讀 Postiz live
+  integrations，缺少兩者時明確提示建立範例設定。
+
 ## v1.0.0 — 2026-05-31（🎉 月底 milestone：框架穩定，5 月完整實證）
 
 從 2026-04-21 Day 1 mega-viral 開始，**41 天 / 25 個 case / 32 條規則 / 4 個 Mode / 14 個 release** — 整套框架穩定，ship v1.0.0 標記。

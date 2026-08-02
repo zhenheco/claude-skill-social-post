@@ -12,11 +12,26 @@ import { appendRaw, readRaw } from '../lib/voice-bootstrap/raw-store.mjs';
 import { distill } from '../lib/voice-bootstrap/distill.mjs';
 import { seedVoice as defaultSeedVoice } from '../lib/voice-bootstrap/seed.mjs';
 import { parse } from '../lib/yaml.mjs';
+import { collectFlywheelMaterial as defaultCollectFlywheelMaterial } from '../lib/material/flywheel-articles.mjs';
 import { renderBrief } from './generate-brief.mjs';
 
 const DEFAULT_PLATFORMS = Object.freeze(['threads', 'facebook', 'linkedin', 'x']);
+const LINK_OK_PLATFORMS = Object.freeze(new Set(['x', 'linkedin']));
 const SENTENCE_PUNCTUATION = /[。，！？.,!?]/u;
 const MARKDOWN_LINK = /\[([^\]]+)\]\([^)]+\)/gu;
+const SEO_AUDIT_MATERIAL = Object.freeze({
+  brand: 'SEOHelp',
+  title: '免費 SEO 健康體檢',
+  url: 'https://1wayseo.com/tools/seo-audit',
+  excerpt: [
+    '獲客入口：用免費 SEO 健康體檢幫老闆或行銷人先看到網站健康分數，不要一開始就推完整方案。',
+    '核心承諾：先診斷技術 SEO、頁面結構、標題描述、內部連結與 Google Search Console 機會頁；完整 SEOHelp 才接整站排查、AI 輔助修復與搜尋成效驗證。',
+    'Threads framing：不要硬賣，正文不要放 URL。寫真實痛點：廣告一停詢問就停、Google 看不懂網站、排名第 4-15 名但沒點擊、漂亮網站藏著壞掉的 SEO 基礎。',
+    'CTA 方向：請讀者留言「健檢」或說想看第一眼；把免費健檢當有用入口，不要每天寫成產品廣告。',
+    'Hard pivot：不要提 n8n、n8nstart、workflow templates、automation templates、Notion sync、webhooks 或 CRM automation。',
+  ].join('\n'),
+  path: null,
+});
 
 function valueAfter(argv, name) {
   const index = argv.indexOf(name);
@@ -35,6 +50,8 @@ function parseArgs(argv) {
     mode: valueAfter(argv, '--mode'),
     platforms: splitCsv(valueAfter(argv, '--platforms')),
     date: valueAfter(argv, '--date'),
+    material: valueAfter(argv, '--material') ?? 'none',
+    materialDate: valueAfter(argv, '--material-date'),
   });
 }
 
@@ -138,6 +155,15 @@ function autopilotRoot(env, configPath) {
   return path.join(path.dirname(stateRoot(env, configPath)), 'autopilot');
 }
 
+function materialItemsFor(args, deps, env) {
+  if (args.material === 'seo-audit') return Promise.resolve(Object.freeze([SEO_AUDIT_MATERIAL]));
+  if (args.material === 'flywheel') {
+    const collectFlywheelMaterial = deps.collectFlywheelMaterial ?? defaultCollectFlywheelMaterial;
+    return collectFlywheelMaterial({ date: args.materialDate ?? args.date, env });
+  }
+  return Promise.resolve(Object.freeze([]));
+}
+
 async function writeText(file, content) {
   await mkdir(path.dirname(file), { recursive: true });
   await writeFile(file, content, 'utf8');
@@ -227,8 +253,11 @@ export async function briefMode(args, deps = {}) {
   const log = deps.log ?? logLine;
   const dir = path.join(autopilotRoot(env, configPath), 'briefs', args.date);
   const results = [];
+  const platforms = platformList(args.platforms);
+  const materialItems = await materialItemsFor(args, deps, env);
+  if (args.material === 'flywheel' && materialItems.length === 0) log('autopilot brief material=none');
 
-  for (const platform of platformList(args.platforms)) {
+  for (const [index, platform] of platforms.entries()) {
     let brief;
     try {
       brief = await loadVoiceContext(platform, {
@@ -249,8 +278,12 @@ export async function briefMode(args, deps = {}) {
       results.push(Object.freeze({ platform, skipped: 'unseeded' }));
       continue;
     }
+    const selected = materialItems.length ? materialItems[index % materialItems.length] : null;
+    const material = selected && !LINK_OK_PLATFORMS.has(platform)
+      ? Object.freeze({ ...selected, url: null })
+      : selected;
     const file = path.join(dir, `${platform}.md`);
-    await writeText(file, renderBrief(brief, pickArchetypes(brief, { n: 1 }), null));
+    await writeText(file, renderBrief(brief, pickArchetypes(brief, { n: 1 }), material));
     log(`autopilot brief platform=${platform} -> ${file}`);
     results.push(Object.freeze({ platform, path: file }));
   }

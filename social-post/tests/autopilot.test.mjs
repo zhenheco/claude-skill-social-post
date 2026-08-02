@@ -269,6 +269,122 @@ test('brief honors an explicit per-host autopilot root override', async () => {
   });
 });
 
+test('brief injects flywheel material round-robin and strips links from R25 platforms', async () => {
+  await withSandbox(async ({ home, env, configPath, corePath }) => {
+    await writeVoice(home, 'threads', voiceText({ seeded: true }));
+    await writeVoice(home, 'linkedin', voiceText({ seeded: true }));
+    await writeVoice(home, 'instagram', voiceText({ seeded: true }));
+    const logs = [];
+
+    await briefMode({
+      platforms: ['threads', 'linkedin', 'instagram'],
+      date: '2026-06-10',
+      material: 'flywheel',
+      materialDate: '2026-06-09',
+      env,
+      configPath,
+      corePath,
+    }, {
+      collectFlywheelMaterial: async (options) => {
+        assert.equal(options.date, '2026-06-09');
+        return Object.freeze([
+          Object.freeze({
+            brand: 'aicycle',
+            title: 'Material A',
+            url: 'https://aicycle.example/blog/a',
+            excerpt: 'First material excerpt.',
+            path: '/tmp/a.md',
+          }),
+          Object.freeze({
+            brand: 'zhenheai',
+            title: 'Material B',
+            url: 'https://zhenheai.example/blog/b',
+            excerpt: 'Second material excerpt.',
+            path: '/tmp/b.md',
+          }),
+          Object.freeze({
+            brand: 'unknown',
+            title: 'Material C',
+            url: 'https://unknown.example/blog/c',
+            excerpt: 'Third material excerpt.',
+            path: '/tmp/c.md',
+          }),
+        ]);
+      },
+      log: (line) => logs.push(line),
+    });
+
+    const briefDir = path.join(home, '.claude/state/autopilot/briefs/2026-06-10');
+    const threadsBrief = await readFile(path.join(briefDir, 'threads.md'), 'utf8');
+    const linkedinBrief = await readFile(path.join(briefDir, 'linkedin.md'), 'utf8');
+    const instagramBrief = await readFile(path.join(briefDir, 'instagram.md'), 'utf8');
+    assert.match(threadsBrief, /Title: Material A/);
+    assert.match(threadsBrief, /URL policy: 本平台禁止外部連結（R25）/);
+    assert.doesNotMatch(threadsBrief, /https:\/\/aicycle\.example/);
+    assert.match(linkedinBrief, /Title: Material B/);
+    assert.match(linkedinBrief, /URL policy: 可在文末附 https:\/\/zhenheai\.example\/blog\/b/);
+    assert.match(instagramBrief, /Title: Material C/);
+    assert.match(instagramBrief, /URL policy: 本平台禁止外部連結（R25）/);
+    assert.doesNotMatch(instagramBrief, /https:\/\/unknown\.example/);
+    assert.doesNotMatch(logs.join('\n'), /material=none/);
+  });
+});
+
+test('brief can replace daily n8n material with the SEO audit lead magnet', async () => {
+  await withSandbox(async ({ home, env, configPath, corePath }) => {
+    await writeVoice(home, 'threads', voiceText({ seeded: true }));
+    await writeVoice(home, 'linkedin', voiceText({ seeded: true }));
+
+    await briefMode({
+      platforms: ['threads', 'linkedin'],
+      date: '2026-06-13',
+      material: 'seo-audit',
+      env,
+      configPath,
+      corePath,
+    });
+
+    const briefDir = path.join(home, '.claude/state/autopilot/briefs/2026-06-13');
+    const threadsBrief = await readFile(path.join(briefDir, 'threads.md'), 'utf8');
+    const linkedinBrief = await readFile(path.join(briefDir, 'linkedin.md'), 'utf8');
+
+    assert.match(threadsBrief, /Brand: SEOHelp/);
+    assert.match(threadsBrief, /Title: 免費 SEO 健康體檢/);
+    assert.match(threadsBrief, /網站健康分數/);
+    assert.match(threadsBrief, /URL policy: 本平台禁止外部連結（R25）/);
+    assert.match(threadsBrief, /不要提 n8n/);
+    assert.doesNotMatch(threadsBrief, /https:\/\/1wayseo\.com\/tools\/seo-audit/);
+
+    assert.match(linkedinBrief, /Brand: SEOHelp/);
+    assert.match(linkedinBrief, /URL policy: 可在文末附 https:\/\/1wayseo\.com\/tools\/seo-audit/);
+    assert.match(linkedinBrief, /不要提 n8n/);
+  });
+});
+
+test('brief material mode logs and continues when no flywheel material exists', async () => {
+  await withSandbox(async ({ home, env, configPath, corePath }) => {
+    await writeVoice(home, 'threads', voiceText({ seeded: true }));
+    const logs = [];
+
+    await briefMode({
+      platforms: ['threads'],
+      date: '2026-06-10',
+      material: 'flywheel',
+      env,
+      configPath,
+      corePath,
+    }, {
+      collectFlywheelMaterial: async () => Object.freeze([]),
+      log: (line) => logs.push(line),
+    });
+
+    const briefPath = path.join(home, '.claude/state/autopilot/briefs/2026-06-10/threads.md');
+    assert.match(await readFile(briefPath, 'utf8'), /# Generation Brief: threads/);
+    assert.doesNotMatch(await readFile(briefPath, 'utf8'), /Source Material/);
+    assert.match(logs.join('\n'), /autopilot brief material=none/);
+  });
+});
+
 test('report writes platform rows with raw counts, voice metadata, draft presence, and blockers', async () => {
   await withSandbox(async ({ home, env, configPath }) => {
     await writeSources(home, 'threads', [

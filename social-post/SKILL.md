@@ -1,6 +1,6 @@
 ---
 name: social-post
-description: 學使用者的 Facebook 個人貼文語氣，依 14 天內容策略日曆，自動產出並發佈到 FB / Instagram / Threads / X。使用時機：使用者說「發文」、「幫我寫一篇貼文」、「用我的風格發」、「今天發一篇」、「PO 一下」、「學我的語氣」、「分析我的貼文風格」、「重新規劃內容」、「排貼文」、「查流量」、「review」時一律觸發；即使只說「發一篇」、「PO 文」、「PO 個廢文」也要觸發。
+description: 學使用者的 Facebook 個人貼文語氣，依 14 天內容策略日曆，自動產出並發佈到 FB / Instagram / Threads / X。使用時機：使用者說「發文」、「幫我寫一篇貼文」、「用我的風格發」、「今天發一篇」、「PO 一下」、「學我的語氣」、「分析我的貼文風格」、「重新規劃內容」、「排貼文」、「查流量」、「戰績 review」時一律觸發；即使只說「發一篇」、「PO 文」、「PO 個廢文」也要觸發。從既有文章裂變多平台草稿 → 用 content-social。
 ---
 
 <!--
@@ -21,11 +21,11 @@ description: 學使用者的 Facebook 個人貼文語氣，依 14 天內容策�
 | 觸發 | 階段 | 讀 |
 |---|---|---|
 | `brand.yaml` 不存在 / 說「重新學風格」 | **P1** | `references/learn_style.md` |
-| `content_plan.md` 不存在 / 說「重新規劃」「排新 14 天」 | **P0** | `references/phase0_plan.md` + `formulas.md` |
+| `content_plan.md` 不存在 / 說「重新規劃」「排新 14 天」 | **P0** | `references/phase0_plan.md` + `content_plan.example.md` + `formulas.md` |
 | 說「發文」「今天發一篇」「PO」「用我的風格發」 | **P2** | `references/generate_and_publish.md` + `$HOME/Documents/CC Cli/brands/personal/core.yaml` + `voice/<platform>.yaml`（由 `config.yaml` `voice_dir`）+ `scripts/generate-brief.mjs` + `content_plan.md` + `formulas.md`（目標公式段）+ `rules.md`（相關規則）+ 目標平台 ref |
 | 說「這篇好不好」「查流量」「分析」 | **診斷** | `references/evaluation.md` + `rules.md`（R6/R23）+ 目標 post 戰績 |
 | 說「歷史怎麼樣」「Day X 發生什麼」 | **案例** | `references/case_studies.md` |
-| 想查某條規則細節 | **規則** | `references/rules.md`（R1-R29 完整版）|
+| 想查某條規則細節 | **規則** | `references/rules.md`（R1-R42 完整版）|
 | 說「/social dashboard」或要截圖週報 | **Dashboard** | `lib/dashboard-server.mjs` + `dashboard/`（local read-only, ECharts CDN, propose-only）|
 
 路由前用一句話告知使用者要做哪階段，給糾正機會。
@@ -47,6 +47,13 @@ Run `node scripts/dashboard.mjs` from this skill directory. It serves a local re
 
 **私人版例外**：使用者若明確在**當前 session** 授權「你自己操作不用問我」，私人版可免逐次確認，僅限該 session。開源版 SKILL.md **永遠保留此閘門不可 bypass**。
 
+## 配圖風格
+
+- 貼文需要配圖時，產圖一律走 Codex CLI `image_gen`（GPT-Image-2 後端，吃 plan quota），不走 OpenAI API。
+- 風格在產文當下逐篇指定，直接寫進產圖 prompt，**無全域固定風格、不定死**（每篇/每貼依內容帶入最適合的專業風格）。
+- **品質護欄（一律套用）**：sophisticated / polished / professional、有景深質感；**禁** cartoon、childish、flat clip-art、isometric toy、mascot、thick outlines；圖內**禁任何文字**。
+- **禁寫「Low quality / simple draft rendering」**：`image_gen` tool 只有 `prompt` 參數（無 quality/size），那句不省 quota（每 generation 計費固定），只會讓圖變粗糙卡通。風格/比例全靠 prompt 文字。
+
 ## 不要做
 
 - 沒授權發文字眼就發
@@ -57,8 +64,9 @@ Run `node scripts/dashboard.mjs` from this skill directory. It serves a local re
 - 猜測 FB 個人頁網址（P1 必須問）
 - 刪除使用者留言 / 貼文（系統硬規則）
 - **🚨 FB / Threads 正文附外部連結（R25 硬規則，絕對禁止）**
+- **🚨 AI 腔抽象空詞（護城河／本質／真正的 X）+ staged 開場 + over-narrate（R34 硬規則，要真實不要像 AI 文；日常標點 ，、，── 與 ！ hype 是 proven 裝置照用）**
 
-## 📋 核心規則速查（R1-R29，完整定義見 `references/rules.md`）
+## 📋 核心規則速查（R1-R42，完整定義見 `references/rules.md`）
 
 | R | 一句話 | 何時關鍵 |
 |---|---|---|
@@ -94,8 +102,18 @@ Run `node scripts/dashboard.mjs` from this skill directory. It serves a local re
 | **R30** 🏆 | FB 社團 cross-post = 留言 5-10x 放大 | 主帳號發完後 |
 | **R31** 🛡️ | F24 Brand 邊界澄清時機（月 1 次，trust reset）| 私訊爆/誤解時 |
 | **R32** 🌟 | 集體 framing「我們 / 一起」= broke 鐵粉圈 +30-50% | 缺 mega hook 時 |
+| **R33** 🧪 | FB 週任務情報：Reels 額度 = 蓋章 R17 該週排；量任務 = 陷阱不追；連 3 指標↑ = 廣推窗口 | 看分析面板時 |
+| **R34** 🚨 | 真實 voice：元兇是「詞」不是標點 ── 禁抽象空詞(護城河/本質/真正的X)+staged+over-narrate；日常標點 ，、，proven 裝置(──分隔符/！hype)照公式用 | 每篇必檢 |
+| **R35** 🏆 | keyword CTA「留言『X』」= broke 引擎(6/9：959 留言→93.1% mega 42K)；**預設公開 link 自助**(精選留言,無 DM 天花板+account-safe)，DM 只小量高觸用；絕不導 GitHub 正文 | giveaway CTA |
+| **R36** 🏆🏆 | demo > claim 母規律：具體成品/可驗證數字碾壓抽象「我很強」；comments ≠ broke | 每篇必檢 / intent 疲勞救援 |
+| **R37** 🏆 | value-prop-lead 開場：「它幫你做什麼」碾壓 meta 故事（8x 觀眾 / 21x 儲存） | giveaway/工具 ship |
+| **R38** | 第三方具體戰績 social proof（works-for-others > I'm great） | 有夥伴用你東西做出成績 |
+| **R39** ⭐ | 分享 = 20x 讚跨粉絲圈最強引擎；內容強時走反摩擦 CTA 分享路徑 | 生成 CTA / 看戰績 |
+| **R40** | Dwell time = 第三廣推信號隱形王牌（查看更多/截圖/revisit） | 設計結構 / 評估 |
+| **R41** | superlative 放大器：「台灣最大/史上最/破紀錄」掛上去 milestone broke 暴增 | milestone/破紀錄文 |
+| **R42** 🧪 | archetype 飽和天花板：連 6+ 篇 F6b 必換 archetype，強化 hook 救不了 | 4 條件全綠仍 fail |
 
-**⭐ = 高頻必讀 / 🚨 = 硬規則 / 🏆 = 最強觸發**
+**⭐ = 高頻必讀 / 🚨 = 硬規則 / 🏆 = 最強觸發 / 🧪 = 候選待實證**
 
 ### 🎯 Viral 4 條件公式（核心）
 
@@ -103,7 +121,7 @@ Run `node scripts/dashboard.mjs` from this skill directory. It serves a local re
 viral = 4 段 4 句結構 + 純血 voice + 全新敘事意圖 + 黃金時段
 ```
 
-4 個 AND，任一缺 = 死。**Readability 是隱藏第 5 條件**（meta ≤ 2 層 / 數字 ≤ 3 個/段 / 5 秒讀懂）。詳見 `rules.md`。
+4 個 AND，任一缺 = 死。**Readability 是隱藏第 5 條件**（meta ≤ 1 層 / 數字 ≤ 3 個/段 / 5 秒讀懂）。詳見 `rules.md`。
 
 ### 🎭 Hao 4 個 Mode（funnel 互補）
 
@@ -111,7 +129,7 @@ viral = 4 段 4 句結構 + 純血 voice + 全新敘事意圖 + 黃金時段
 |---|---|---|---|
 | **A 日常** | 短句吐槽 | 鐵粉黏著 | 90% 鐵粉 |
 | **B 純血** | F6b / F15 mini | 擴散 + Line 群 | 90%+ 廣推 |
-| **C 深度反思** | F20/F21/F22/F23/F24/**F25a/b/c** | 信任深化 + 儲存 + trust reset + 集體 framing | 可 broke 94.5% |
+| **C 深度反思** | F20/F21/F22/F23/F24/**F25a/b/c**/**F26**/**F27**/**F28**/**F29** | 信任深化 + 儲存 + trust reset + 集體 framing + 作品集 reveal + 單品 giveaway + 第三方戰績 + 再ship揭露 | 可 broke 94.5% |
 | **Thread F19** | 立場宣言 | Thread 轉發 | Thread 廣推 |
 
 ## 💡 實用技巧
@@ -119,6 +137,7 @@ viral = 4 段 4 句結構 + 純血 voice + 全新敘事意圖 + 黃金時段
 - **作者精選留言**：留言 > 50 時用單則精選留言置 CTA（FB 可放 1 個 URL，正文不行）
 - **留言框 Enter = 送出**：留言壓成單行用 `→ ，／` 分隔
 - **FB 原生排程**：夜貓時段用「貼文設定 → 排程選項」，細節見 `facebook.md`
+- **🛡️ 帳號封號防護**：keyword CTA（R35）爆量 > 100 留言別手動私訊全部（FB 判私訊異常 → 限制 / 封號），改精選留言公開 link + Discord；開藍勾勾驗證（R35 天花板，Case 29 血淚）
 
 ## 🔄 持續優化（開發原則）
 
@@ -126,18 +145,20 @@ viral = 4 段 4 句結構 + 純血 voice + 全新敘事意圖 + 黃金時段
 - **P1 語氣永遠套用**：生成草稿必先讀 `core.yaml` + `voice/<platform>.yaml` 並跑 `scripts/generate-brief.mjs`，不像 voice 重生成（公式 < 語氣）
 - **P2 同步開源時機**：跑 3-5 篇實戰 + 正面戰績 → 同步通用檔（`SKILL.md` `references/*.md`）；**絕不搬** `brand.yaml`（在 CC Cli，本就不在 repo）`content_plan.md`；每次 = 新版號 + CHANGELOG + push
 - **戰績追蹤**：發完使用者回報 → 立刻更新 `content_plan.md` 同筆（不新建 row）
-- **review 節奏**：每兩週說「review」→ 讀戰績 → 找最好/最差公式 → 新日曆寫回 + 舊的搬歷史段
+- **review 節奏**：每兩週說「戰績 review」→ 讀戰績 → 找最好/最差公式 → 新日曆寫回 + 舊的搬歷史段
 
 ## 📌 快速查詢
 
 | 需要 | 去 |
 |---|---|
-| R1-R29 規則完整定義 | `references/rules.md` |
+| R1-R42 規則完整定義 | `references/rules.md` |
 | FB 2026 演算法權重 + 4 指標 | `references/evaluation.md` |
 | 案例解剖（Day 1-7 + 5 月 Mode C）| `references/case_studies.md` |
-| F1-F23 公式 | `references/formulas.md` |
+| F1-F29 公式 | `references/formulas.md` |
+| F19 部署包（工坊使者 Threads 破圈手冊）| `F19_DEPLOYMENT_KIT.md` |
 | 受眾畫像 + 活躍時段 | `core.yaml` + `voice/<platform>.yaml`（`brand.yaml` @deprecated fallback） |
 | 今天 Day N + 戰績 | `content_plan.md` |
+| content_plan 格式 | `content_plan.example.md` + `references/phase0_plan.md` |
 
 ## 常見踩雷
 

@@ -6,6 +6,8 @@ import path from 'node:path';
 import { promisify } from 'node:util';
 import test from 'node:test';
 
+import { renderBrief } from '../scripts/generate-brief.mjs';
+
 const execFileAsync = promisify(execFile);
 
 const config = `paths:
@@ -155,4 +157,71 @@ test('generate-brief prints a clear unseeded notice and exits zero', async () =>
 
     assert.match(stdout, /voice not seeded for threads — run voice-bootstrap first/);
   });
+});
+
+test('renderBrief preserves string topic and omits source material for null', () => {
+  const brief = {
+    platform: 'threads',
+    identity: { name: 'Nelson Chou', niche: '企業 AI 導入', values: ['實戰導向'] },
+    voice_directive: { sharpness: 'high', demonstrate_expertise: true, proof_over_claim: true },
+    language: 'zh-tw',
+    format_default: 'short-thread',
+    style_fingerprint: { sentence_length_bucket: 'long', avg_beats: 3, emoji_density: 0, link_rate: 0, register_hint: 'personal' },
+    apex_ctas: [],
+    avoid_topics: [],
+    forbidden_imports: [],
+  };
+  const chosen = [{ archetype: 'news_hottake', skeleton: '反直覺判斷' }];
+
+  assert.match(renderBrief(brief, chosen, 'AI rollout'), /Topic: AI rollout/);
+  assert.doesNotMatch(renderBrief(brief, chosen, null), /Source Material/);
+});
+
+test('renderBrief renders source material with URL policy when a URL is available', () => {
+  const brief = {
+    platform: 'linkedin',
+    identity: { name: 'Nelson Chou', niche: '企業 AI 導入', values: [] },
+    voice_directive: {},
+    language: 'zh-tw',
+    style_fingerprint: {},
+    apex_ctas: [],
+    avoid_topics: [],
+    forbidden_imports: [],
+  };
+
+  const output = renderBrief(brief, [], {
+    brand: 'aicycle',
+    title: 'AI rollout article',
+    excerpt: 'Title plus key H2 and prose.',
+    url: 'https://aicycle.example/blog/ai-rollout',
+  });
+
+  assert.match(output, /## Source Material（素材，非模板）/);
+  assert.match(output, /Brand: aicycle/);
+  assert.match(output, /Title: AI rollout article/);
+  assert.match(output, /Title plus key H2 and prose\./);
+  assert.match(output, /URL policy: 可在文末附 https:\/\/aicycle\.example\/blog\/ai-rollout/);
+});
+
+test('renderBrief renders no-link source material policy', () => {
+  const brief = {
+    platform: 'threads',
+    identity: { name: 'Nelson Chou', niche: '企業 AI 導入', values: [] },
+    voice_directive: {},
+    language: 'zh-tw',
+    style_fingerprint: {},
+    apex_ctas: [],
+    avoid_topics: [],
+    forbidden_imports: [],
+  };
+
+  const output = renderBrief(brief, [], {
+    brand: 'zhenheai',
+    title: 'No link article',
+    excerpt: 'Insight only.',
+    url: null,
+  });
+
+  assert.match(output, /URL policy: 本平台禁止外部連結（R25）/);
+  assert.doesNotMatch(output, /Topic:/);
 });

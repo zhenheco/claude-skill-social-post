@@ -2,6 +2,9 @@
 social-post/style_profile.md
 social-post/content_plan.md
 social-post/_scraped_posts_draft.md
+social-post/lib/posting/channels.json
+social-post/voice/
+social-post/core.yaml
 
 # Claude Code 設定（含本機權限清單）
 .claude/

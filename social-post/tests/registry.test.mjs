@@ -37,7 +37,7 @@ platform_registry:
     language_stack: zh
   threads:
     access_mode: broadcast
-    posting_mechanism: browser_attended_draft_1click
+    posting_mechanism: postiz_official_api
     language_stack: zh
   linkedin:
     access_mode: official_api
@@ -129,6 +129,7 @@ test('T6 loadRegistry validates the seeded registry shape', async () => {
     }
     assert.equal(registry.linkedin.access_mode, 'official_api');
     assert.equal(registry.x.access_mode, 'official_api');
+    assert.equal(registry.threads.posting_mechanism, 'postiz_official_api');
     assert.equal(registry.beehiiv.access_mode, 'owned');
     assert.equal(registry.vocus.access_mode, 'owned');
     assert.equal(registry.devto.access_mode, 'owned');

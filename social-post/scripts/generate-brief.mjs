@@ -31,7 +31,23 @@ function list(value) {
   return Array.isArray(value) && value.length ? value.join(', ') : 'none';
 }
 
-export function renderBrief(brief, chosen, topic) {
+function isMaterial(value) {
+  return value && typeof value === 'object' && !Array.isArray(value);
+}
+
+function materialLines(material) {
+  return [
+    '',
+    '## Source Material（素材，非模板）',
+    `Brand: ${material.brand} — 僅作觀點素材；輸出必須是第一人稱個人觀點（「我最近在想/我發現」），禁止業配腔、禁止逐字改寫文章。`,
+    `Title: ${material.title}`,
+    'Key excerpt:',
+    material.excerpt ?? '',
+    `URL policy: ${material.url ? `可在文末附 ${material.url}` : '本平台禁止外部連結（R25）— 只取洞見，不提連結'}`,
+  ];
+}
+
+export function renderBrief(brief, chosen, topicOrMaterial) {
   const style = brief.style_fingerprint ?? {};
   const directive = brief.voice_directive ?? {};
   const lines = [
@@ -49,7 +65,8 @@ export function renderBrief(brief, chosen, topic) {
     `Format default: ${brief.format_default ?? 'unset'}`,
   ];
 
-  if (topic) lines.push(`Topic: ${topic}`);
+  if (typeof topicOrMaterial === 'string' && topicOrMaterial) lines.push(`Topic: ${topicOrMaterial}`);
+  if (isMaterial(topicOrMaterial)) lines.push(...materialLines(topicOrMaterial));
 
   lines.push(
     '',

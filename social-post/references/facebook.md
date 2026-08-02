@@ -10,7 +10,7 @@
 
 ## 生成調性
 
-- 長敘事 OK，沿 `brand.yaml` 的 `sentence` 段落偏好
+- 長敘事 OK，沿 `brand.yaml` 段落偏好
 - 爆款 F6 用四段式（成果炸場 / 教學引流 / 邀請碼 / 合作）
 - hashtag 少或無
 
