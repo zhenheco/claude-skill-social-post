@@ -14,6 +14,12 @@ import { parse } from '../lib/yaml.mjs';
 const { migrate } = migration;
 const realBrandPath = path.join(os.homedir(), 'Documents/CC Cli/brands/personal/brand.yaml');
 
+// A real brand.yaml only exists in the private vault: it is absent on CI runners
+// and must never be committed as a fixture to this public repo.
+const vaultOnly = existsSync(realBrandPath)
+  ? {}
+  : { skip: 'personal vault brand.yaml is not present' };
+
 async function withFixtureVault(fn) {
   const vaultRoot = await mkdtemp(path.join(os.tmpdir(), 'migrate-brand-'));
   const source = await readFile(realBrandPath, 'utf8');
@@ -43,7 +49,7 @@ async function snapshotTree(root, current = root) {
   return result;
 }
 
-test('T1 migration produces valid core.yaml and five valid voice files', async () => {
+test('T1 migration produces valid core.yaml and five valid voice files', vaultOnly, async () => {
   await withFixtureVault(async (vaultRoot) => {
     const result = await migrate({ vaultRoot });
 
@@ -58,7 +64,7 @@ test('T1 migration produces valid core.yaml and five valid voice files', async (
   });
 });
 
-test('T6 invalid produced voice aborts before writing split files', async () => {
+test('T6 invalid produced voice aborts before writing split files', vaultOnly, async () => {
   await withFixtureVault(async (vaultRoot) => {
     await assert.rejects(
       migrate({
@@ -78,7 +84,7 @@ test('T6 invalid produced voice aborts before writing split files', async () => 
   });
 });
 
-test('T2 user_custom is preserved byte-for-byte and recorded in core', async () => {
+test('T2 user_custom is preserved byte-for-byte and recorded in core', vaultOnly, async () => {
   await withFixtureVault(async (vaultRoot, source) => {
     const expected = migration.preserveUserCustom(source);
     const result = await migrate({ vaultRoot });
@@ -91,7 +97,7 @@ test('T2 user_custom is preserved byte-for-byte and recorded in core', async () 
   });
 });
 
-test('T3 write-ban guard rejects user_custom and core.yaml target writes', async () => {
+test('T3 write-ban guard rejects user_custom and core.yaml target writes', vaultOnly, async () => {
   await withFixtureVault(async (vaultRoot) => {
     const writeBans = ['user_custom', 'core.yaml'];
 
@@ -109,7 +115,7 @@ test('T3 write-ban guard rejects user_custom and core.yaml target writes', async
   });
 });
 
-test('T5 brand.yaml is backed up byte-identically before produced files are built', async () => {
+test('T5 brand.yaml is backed up byte-identically before produced files are built', vaultOnly, async () => {
   await withFixtureVault(async (vaultRoot, source) => {
     const now = new Date('2026-06-03T00:00:00.000Z');
     let observedBackup;
@@ -132,7 +138,7 @@ test('T5 brand.yaml is backed up byte-identically before produced files are buil
   });
 });
 
-test('T4 second run on a valid split tree is a no-op with zero diff', async () => {
+test('T4 second run on a valid split tree is a no-op with zero diff', vaultOnly, async () => {
   await withFixtureVault(async (vaultRoot) => {
     const first = await migrate({ vaultRoot, now: new Date('2026-06-03T00:00:00.000Z') });
     const before = await snapshotTree(vaultRoot);
@@ -147,7 +153,7 @@ test('T4 second run on a valid split tree is a no-op with zero diff', async () =
   });
 });
 
-test('T7 migration source has no hardcoded home paths and writes stay in vault', async () => {
+test('T7 migration source has no hardcoded home paths and writes stay in vault', vaultOnly, async () => {
   await withFixtureVault(async (vaultRoot) => {
     await migrate({ vaultRoot });
     const scriptSource = await readFile(new URL('../scripts/migrate-brand.mjs', import.meta.url), 'utf8');
@@ -161,7 +167,7 @@ test('T7 migration source has no hardcoded home paths and writes stay in vault',
   });
 });
 
-test('T8 produced core keeps propose-only automation flags and validator rejects flips', async () => {
+test('T8 produced core keeps propose-only automation flags and validator rejects flips', vaultOnly, async () => {
   await withFixtureVault(async (vaultRoot) => {
     await migrate({ vaultRoot });
     const corePath = path.join(vaultRoot, 'core.yaml');

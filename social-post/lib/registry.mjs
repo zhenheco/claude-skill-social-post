@@ -110,9 +110,16 @@ function auditPath(options = {}) {
 }
 
 function auditLog(record, options = {}) {
-  const file = auditPath(options);
-  mkdirSync(path.dirname(file), { recursive: true });
-  appendFileSync(file, `${JSON.stringify({ ts: new Date().toISOString(), ...record })}\n`, 'utf8');
+  try {
+    const file = auditPath(options);
+    mkdirSync(path.dirname(file), { recursive: true });
+    appendFileSync(file, `${JSON.stringify({ ts: new Date().toISOString(), ...record })}\n`, 'utf8');
+  } catch (error) {
+    // auditPath resolves through the config file, so an unreadable config used
+    // to replace a hard-exclude refusal with an unrelated ENOENT. The refusal
+    // must survive its own audit trail failing; degrade to stderr instead.
+    process.stderr.write(`registry audit log unavailable: ${error.message}\n`);
+  }
 }
 
 function parseScalar(value) {

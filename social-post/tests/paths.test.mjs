@@ -22,6 +22,12 @@ import {
 const realConfigPath = path.join(os.homedir(), 'Documents/CC Cli/brands/personal/config.yaml');
 const homePathLiteralPattern = new RegExp('/(' + ['Users', 'home'].join('|') + ')/');
 
+// These two assert against the operator's real vault config, which no CI runner
+// has and which must not be committed to this public repo.
+const vaultOnly = existsSync(realConfigPath)
+  ? {}
+  : { skip: 'personal vault config.yaml is not present' };
+
 const goodConfig = `paths:
   state_root: \${HOME}/\${SKILL_DIR}/state/social-evolve
   metrics: \${HOME}/\${SKILL_DIR}/state/social-evolve/\${platform}/metrics.jsonl
@@ -146,13 +152,13 @@ test('T7 expandTemplate is pure and rejects unresolved variables', () => {
   );
 });
 
-test('T8 real config has no hardcoded paths or home literals', async () => {
+test('T8 real config has no hardcoded paths or home literals', vaultOnly, async () => {
   const content = await readFile(realConfigPath, 'utf8');
 
   assert.doesNotMatch(content, homePathLiteralPattern);
 });
 
-test('T9 real config reuses prediction-distill state locations', () => {
+test('T9 real config reuses prediction-distill state locations', vaultOnly, () => {
   assert.equal(resolve('predictions', 'facebook').path, path.join(os.homedir(), '.claude/state/predictions'));
   assert.equal(resolve('predictions', 'facebook').lane, 'social-facebook');
   assert.equal(resolve('decisions').path, path.join(os.homedir(), '.claude/state/digest-decisions.json'));
