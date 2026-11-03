@@ -162,6 +162,9 @@ def private_inventory(root: Path, pin: dict, tree: tuple[list[Path], list[Path]]
 
 def copy_files(source: Path, destination: Path, tree: tuple[list[Path], list[Path]]) -> None:
     directories, files = tree
+    lock = Path("data/.write.lock")
+    if any(path == lock or lock in path.parents for path in [*directories, *files]):
+        raise ValueError(f"outcome store lock exists: {source / lock}")
     for relative in directories:
         (destination / relative).mkdir(parents=True, exist_ok=True)
     expected = {}
@@ -216,8 +219,8 @@ def replace_target(staging: Path, target: Path) -> None:
 def rollback(target: Path, dry_run: bool) -> None:
     if not managed(target):
         raise ValueError("target is not a managed installation")
-    current_tree = safe_tree(target)
     check_lock(target)
+    current_tree = safe_tree(target)
     current_private = private_inventory(target, read_pin(target), current_tree)
     prefix = target.name + ".bak-"
     backups = [path for path in target.parent.iterdir()
@@ -225,8 +228,8 @@ def rollback(target: Path, dry_run: bool) -> None:
     if not backups:
         raise ValueError("no managed backup to restore")
     previous = max(backups, key=lambda path: path.name)
-    previous_tree = safe_tree(previous)
     check_lock(previous)
+    previous_tree = safe_tree(previous)
     previous_pin = read_pin(previous)
     previous_private = private_inventory(previous, previous_pin, previous_tree)
     old_private_files = {path.as_posix() for path in previous_private[1]}
@@ -250,6 +253,8 @@ def rollback(target: Path, dry_run: bool) -> None:
             previous_pin["files"].pop(path, None)
         write_pin(staging, previous_pin)
         safe_tree(staging)
+        check_lock(staging)
+        check_lock(previous)
         check_lock(target)
         replace_target(staging, target)
 
@@ -261,8 +266,8 @@ def install(repo: Path, ref: str, target: Path, private: Path | None, dry_run: b
     source = None
     source_tree: tuple[list[Path], list[Path]] = ([], [])
     if exists:
-        tree = safe_tree(target)
         check_lock(target)
+        tree = safe_tree(target)
         source = target
         source_tree = private_inventory(target, read_pin(target), tree)
     elif private is not None:
@@ -270,6 +275,7 @@ def install(repo: Path, ref: str, target: Path, private: Path | None, dry_run: b
             raise ValueError("target and private directory overlap")
         if private.exists() or private.is_symlink():
             source = private
+            check_lock(private)
             source_tree = safe_tree(private)
             if any(path.as_posix() in {PIN, "data/rule_registry.json"} for path in source_tree[1]):
                 raise ValueError("private import contains a reserved file")
@@ -308,8 +314,9 @@ def install(repo: Path, ref: str, target: Path, private: Path | None, dry_run: b
                "files": public, "private_files": sorted(private_files)}
         write_pin(staging, pin)
         safe_tree(staging)
-        if exists:
-            check_lock(target)
+        check_lock(staging)
+        if source is not None:
+            check_lock(source)
         replace_target(staging, target)
 
 

@@ -32,7 +32,7 @@ python3 -B zhenhe/tools/install_skill.py --rollback --target "$SP_TARGET"
 
 私人資料留在 target 內，均為一般檔案，不使用 symlink。範圍包括 `style_profile.md`、`content_plan.md`、`_scraped_posts_draft.md`、`.rd/`、`drafts/` 及 `data/` 中除 `rule_registry.json` 以外的所有內容，也包含舊 pin 公開檔清單以外的其他路徑。`voice_quick.md` 若與舊 pin 的公開 hash 不同，就視為私人資料沿用；未修改則換成新 archive 版本。
 
-安裝或退回前必須確認 Hermes 沒有執行 social-post：安裝器會拒絕既有的 `data/.write.lock`，但僅靠檢查鎖檔不能防止檢查後有新工作啟動。正式安裝還須避開台北時間 08:00–09:00、12:00–13:00、17:00–18:00、21:00–22:00，以及 PC 夜間升級時段；夜間實際升級時間須另行確認。
+安裝或退回前必須確認 Hermes 沒有執行 social-post：首次匯入來源、重裝時的 target 或退回時的 target 與備份只要存在 `data/.write.lock`（檔案或目錄），安裝器便拒絕處理，也不會把鎖帶入新版本。換入前會再次檢查來源及新版本，但僅靠檢查鎖檔不能防止檢查後有新工作啟動。正式安裝還須避開台北時間 08:00–09:00、12:00–13:00、17:00–18:00、21:00–22:00，以及 PC 夜間升級時段；夜間實際升級時間須另行確認。
 
 ## Python 實測（2026-11-03）
 

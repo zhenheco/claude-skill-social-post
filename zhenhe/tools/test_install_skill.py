@@ -12,6 +12,9 @@ import tempfile
 import unittest
 from datetime import datetime
 from pathlib import Path
+from unittest import mock
+
+import install_skill
 
 
 INSTALLER = Path(__file__).with_name("install_skill.py")
@@ -173,6 +176,61 @@ class InstallSkillTests(unittest.TestCase):
         self.assert_success(self.run_installer(private=self.private))
         self.assertEqual((self.target / "voice_quick.md").read_text(), "imported voice")
 
+    def test_first_import_rejects_write_lock_without_creating_target(self):
+        for lock_kind in ("directory", "file"):
+            with self.subTest(lock_kind=lock_kind):
+                private = self.private / lock_kind
+                data = private / "data"
+                data.mkdir(parents=True)
+                source = data / "posts.jsonl"
+                source.write_text("fixture data\n")
+                before = hashlib.sha256(source.read_bytes()).hexdigest()
+                target = self.root / f"install-{lock_kind}" / "social-post"
+                target.parent.mkdir(parents=True)
+                lock = data / ".write.lock"
+                if lock_kind == "directory":
+                    lock.mkdir()
+                else:
+                    lock.write_text("fixture lock")
+                source_paths = sorted(p.relative_to(private) for p in private.rglob("*"))
+                result = self.run_installer(target=target, private=private)
+                self.assertEqual(result.returncode, 2, result.stdout + result.stderr)
+                self.assertIn("outcome store lock exists", result.stderr)
+                self.assertFalse(target.exists())
+                self.assertEqual(list(target.parent.iterdir()), [])
+                self.assertEqual(sorted(p.relative_to(private) for p in private.rglob("*")), source_paths)
+                self.assertEqual(hashlib.sha256(source.read_bytes()).hexdigest(), before)
+                if lock_kind == "directory":
+                    self.assertTrue(lock.is_dir())
+                else:
+                    self.assertEqual(lock.read_text(), "fixture lock")
+
+    def test_first_import_rejects_lock_created_during_copy(self):
+        (self.private / "data").mkdir(parents=True)
+        (self.private / "data/posts.jsonl").write_text("fixture data\n")
+        original_copy = install_skill.copy_files
+
+        def copy_then_lock(source, destination, tree):
+            original_copy(source, destination, tree)
+            if source == self.private:
+                (source / "data/.write.lock").mkdir()
+
+        with mock.patch.object(install_skill, "copy_files", side_effect=copy_then_lock):
+            with self.assertRaisesRegex(ValueError, "outcome store lock exists"):
+                install_skill.install(self.repo, "HEAD", self.target, self.private, False)
+        self.assertFalse(self.target.exists())
+        self.assertEqual(list(self.target.parent.iterdir()), [])
+        self.assertEqual((self.private / "data/posts.jsonl").read_text(), "fixture data\n")
+        self.assertTrue((self.private / "data/.write.lock").is_dir())
+
+    def test_archive_write_lock_is_not_installed(self):
+        self.write("social-post/data/.write.lock", "fixture lock")
+        self.commit("archive lock")
+        result = self.run_installer()
+        self.assertEqual(result.returncode, 2, result.stdout + result.stderr)
+        self.assertFalse(self.target.exists())
+        self.assertEqual(list(self.target.parent.iterdir()), [])
+
     def test_reinstall_ignores_even_a_linked_import_source(self):
         self.assert_success(self.run_installer())
         self.target_file("data/posts.jsonl", "current data")
@@ -275,6 +333,44 @@ class InstallSkillTests(unittest.TestCase):
         self.assertTrue(link.is_symlink())
         self.assertEqual((backups[0] / ".zhenhe-pin.json").read_bytes(), before)
         self.assertEqual(list(self.target.parent.glob("social-post.bak-*")), backups)
+
+    def test_rollback_rejects_write_lock_in_current_or_backup(self):
+        self.assert_success(self.run_installer())
+        self.assert_success(self.run_installer())
+        backup = next(self.target.parent.glob("social-post.bak-*"))
+        target_pin = (self.target / ".zhenhe-pin.json").read_bytes()
+        backup_pin = (backup / ".zhenhe-pin.json").read_bytes()
+        for source in (self.target, backup):
+            with self.subTest(source=source):
+                lock = source / "data/.write.lock"
+                lock.mkdir()
+                result = self.rollback()
+                self.assertEqual(result.returncode, 2, result.stdout + result.stderr)
+                self.assertTrue(lock.is_dir())
+                self.assertEqual((self.target / ".zhenhe-pin.json").read_bytes(), target_pin)
+                self.assertEqual((backup / ".zhenhe-pin.json").read_bytes(), backup_pin)
+                self.assertEqual(list(self.target.parent.glob("social-post.bak-*")), [backup])
+                lock.rmdir()
+
+    def test_rollback_rejects_backup_lock_created_during_copy(self):
+        self.assert_success(self.run_installer())
+        self.assert_success(self.run_installer())
+        backup = next(self.target.parent.glob("social-post.bak-*"))
+        target_pin = (self.target / ".zhenhe-pin.json").read_bytes()
+        original_copy = install_skill.copy_files
+
+        def copy_then_lock(source, destination, tree):
+            original_copy(source, destination, tree)
+            if source == backup:
+                (source / "data/.write.lock").mkdir()
+
+        with mock.patch.object(install_skill, "copy_files", side_effect=copy_then_lock):
+            with self.assertRaisesRegex(ValueError, "outcome store lock exists"):
+                install_skill.rollback(self.target, False)
+        self.assertEqual((self.target / ".zhenhe-pin.json").read_bytes(), target_pin)
+        self.assertEqual(list(self.target.parent.glob("social-post.bak-*")), [backup])
+        self.assertEqual(list(self.target.parent.glob(".social-post.rollback-*")), [])
+        self.assertTrue((backup / "data/.write.lock").is_dir())
 
     def test_rollback_does_not_resurrect_deleted_private_files(self):
         self.assert_success(self.run_installer())
