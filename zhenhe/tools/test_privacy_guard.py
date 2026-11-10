@@ -108,6 +108,39 @@ class PrivacyGuardTests(unittest.TestCase):
         self.git("add", "-f", *paths)
         self.assert_guard(1, *paths)
 
+    def test_documented_private_root_directory_is_rejected(self):
+        path = "worker-home/.hermes/profiles/personal-social/social-post-private/notes.md"
+        self.write(path)
+        self.git("add", "-f", path)
+        self.assert_guard(1, path)
+
+    def test_extra_key_and_credential_file_names_are_rejected(self):
+        paths = (
+            "keys/id_rsa", "keys/id_ed25519", "keys/cert.p12",
+            "keys/cert.pfx", "cfg/credentials.json",
+        )
+        for path in paths:
+            self.write(path)
+        self.git("add", "-f", *paths)
+        self.assert_guard(1, *paths)
+
+    def test_secret_content_is_rejected_in_committed_and_staged_blobs(self):
+        # Built from pieces so this file itself passes the repo content scan.
+        secret = "Authorization" + ": Bearer " + "abcdefgh12345678\n"
+        self.write("zhenhe/notes.md", secret)
+        self.git("add", "zhenhe/notes.md")
+        self.assert_guard(1, "zhenhe/notes.md")
+        self.git("commit", "-qm", "add secret")
+        self.assert_guard(1, "zhenhe/notes.md")
+        self.assert_guard(1, "zhenhe/notes.md", arguments=("--ref", "HEAD"))
+
+    def test_staged_secret_is_judged_by_the_index_blob_not_the_worktree(self):
+        secret = "Authorization" + ": Bearer " + "abcdefgh12345678\n"
+        self.write("zhenhe/notes.md", secret)
+        self.git("add", "zhenhe/notes.md")
+        self.write("zhenhe/notes.md", "clean\n")
+        self.assert_guard(1, "zhenhe/notes.md")
+
     def test_newline_in_path_is_reported_on_one_line(self):
         path = "drafts/line\nname.md"
         self.write(path)

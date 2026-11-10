@@ -8,7 +8,14 @@ import json
 import os
 import subprocess
 import sys
-from pathlib import PurePosixPath
+import tempfile
+from pathlib import Path, PurePosixPath
+
+ROOT = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(ROOT / "social-post" / "scripts"))
+from sync_public import privacy_violations  # noqa: E402
+
+KEY_NAMES = {"id_rsa", "id_dsa", "id_ecdsa", "id_ed25519", "credentials.json"}
 
 
 def git(repo: str, *arguments: str) -> bytes:
@@ -61,9 +68,9 @@ def private_reason(path: str) -> str | None:
         return None
     if name in {"style_profile.md", "content_plan.md", "_scraped_posts_draft.md"}:
         return "private profile or draft"
-    if any(part in {"drafts", ".rd"} for part in parts[:-1]):
+    if any(part in {"drafts", ".rd", "social-post-private"} for part in parts[:-1]):
         return "private directory"
-    if any(part.startswith(".env") for part in parts) or name.endswith((".pem", ".key")):
+    if any(part.startswith(".env") for part in parts) or name in KEY_NAMES or name.endswith((".pem", ".key", ".p12", ".pfx")):
         return "environment or key file"
     for index in range(len(parts) - 1):
         if parts[index:index + 2] == ("social-post", "data"):
@@ -84,6 +91,23 @@ def inspect_entries(entries: dict[str, tuple[str, str]], upstream: dict[str, tup
             violations.add((path, "voice_quick.md differs from upstream"))
         if entry[0] == "unmerged":
             violations.add((path, "unmerged index entry"))
+    return violations
+
+
+def content_violations(repo: str, entries: dict[str, tuple[str, str]]) -> set[tuple[str, str]]:
+    """Scan the blobs a ref or the index points at, never the working directory."""
+    config = json.loads((ROOT / "audit.config.json").read_text(encoding="utf-8-sig"))
+    violations = set()
+    with tempfile.TemporaryDirectory() as scratch:
+        rows = []
+        for number, (path, (kind, blob)) in enumerate(sorted(entries.items())):
+            if kind == "blob" and not private_reason(path):
+                copy = Path(scratch) / str(number)
+                copy.write_bytes(git(repo, "cat-file", "blob", blob))
+                rows.append((copy, path))
+        for failure in privacy_violations(rows, config):
+            path, _, reason = failure.partition(": ")
+            violations.add((path, reason))
     return violations
 
 
@@ -109,10 +133,14 @@ def main() -> int:
         upstream_tree = tree_id(args.repo, args.upstream_ref, "upstream")
         target_tree = tree_id(args.repo, args.ref if args.ref is not None else "HEAD", "target")
         upstream = tree_entries(args.repo, upstream_tree)
-        violations = inspect_entries(tree_entries(args.repo, target_tree), upstream)
+        target = tree_entries(args.repo, target_tree)
+        violations = inspect_entries(target, upstream)
+        violations.update(content_violations(args.repo, target))
         violations.update(diff_violations(args.repo, upstream_tree, target_tree))
         if args.ref is None:
-            violations.update(inspect_entries(index_entries(args.repo), upstream))
+            staged = index_entries(args.repo)
+            violations.update(inspect_entries(staged, upstream))
+            violations.update(content_violations(args.repo, staged))
             violations.update(diff_violations(args.repo, "--cached", upstream_tree))
     except (OSError, RuntimeError) as error:
         print(f"privacy guard error: {error}", file=sys.stderr)
