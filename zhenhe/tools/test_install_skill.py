@@ -3,11 +3,13 @@
 from __future__ import annotations
 
 import hashlib
+import io
 import json
 import os
 import stat
 import subprocess
 import sys
+import tarfile
 import tempfile
 import unittest
 from datetime import datetime
@@ -32,6 +34,7 @@ class InstallSkillTests(unittest.TestCase):
         self.git("init", "-q")
         self.write("social-post/SKILL.md", "original skill\n")
         self.write("social-post/voice_quick.md", "public starter\n")
+        self.write("social-post/current_brief.md", "public direction\n")
         self.write("social-post/data/rule_registry.json", '{"rules": []}\n')
         self.write("zhenhe/overlay/extra.md", "pinned overlay\n")
         self.commit("fixture")
@@ -407,6 +410,64 @@ class InstallSkillTests(unittest.TestCase):
         result = self.rollback()
         self.assertEqual(result.returncode, 2, result.stdout + result.stderr)
         self.assertEqual((self.target / "SKILL.md").read_text(), "original skill\n")
+
+
+    def test_edited_current_brief_is_preserved_on_reinstall_import_and_rollback(self):
+        self.assert_success(self.run_installer())
+        self.target_file("current_brief.md", "my direction")
+        self.assert_success(self.run_installer())
+        self.assertEqual((self.target / "current_brief.md").read_text(), "my direction")
+        self.assertIn("current_brief.md", self.pin()["private_files"])
+        self.assertNotIn("current_brief.md", self.pin()["files"])
+        self.write("social-post/SKILL.md", "second version\n")
+        self.commit("second fixture")
+        self.assert_success(self.run_installer())
+        self.target_file("current_brief.md", "latest direction")
+        self.assert_success(self.rollback())
+        self.assertEqual((self.target / "current_brief.md").read_text(), "latest direction")
+        imported = self.root / "imported" / "social-post"
+        self.private.mkdir()
+        (self.private / "current_brief.md").write_text("imported direction")
+        self.assert_success(self.run_installer(target=imported, private=self.private))
+        self.assertEqual((imported / "current_brief.md").read_text(), "imported direction")
+
+    def test_unmodified_current_brief_is_updated_from_new_archive(self):
+        self.assert_success(self.run_installer())
+        self.write("social-post/current_brief.md", "new public direction\n")
+        self.commit("updated brief")
+        self.assert_success(self.run_installer())
+        self.assertEqual((self.target / "current_brief.md").read_text(), "new public direction\n")
+        self.assertNotIn("current_brief.md", self.pin()["private_files"])
+
+    def test_archive_paths_with_windows_separators_or_drives_are_rejected(self):
+        for name in ("social-post/..\\..\\evil", "social-post/D:evil", "social-post/\\escape",
+                     "social-post/a\\b"):
+            with self.subTest(name=name):
+                buffer = io.BytesIO()
+                with tarfile.open(fileobj=buffer, mode="w") as archive:
+                    entry = tarfile.TarInfo(name)
+                    entry.size = 1
+                    archive.addfile(entry, io.BytesIO(b"x"))
+                destination = self.root / "staging"
+                destination.mkdir(exist_ok=True)
+                with self.assertRaisesRegex(ValueError, "unsafe archive path"):
+                    install_skill.extract_archive(buffer.getvalue(), "social-post", destination)
+                self.assertEqual(list(destination.iterdir()), [])
+
+    def test_reinstall_and_rollback_keep_private_directory_modes(self):
+        self.assert_success(self.run_installer())
+        self.target_file("data/posts.jsonl", "record\n")
+        self.write("social-post/SKILL.md", "second version\n")
+        self.commit("second fixture")
+        previous = os.umask(0o022)
+        self.addCleanup(os.umask, previous)
+        for step in (self.run_installer, self.rollback):
+            for directory in (self.target, self.target / "data"):
+                directory.chmod(0o700)
+            self.assert_success(step())
+            for directory in (self.target, self.target / "data"):
+                self.assertEqual(stat.S_IMODE(directory.stat().st_mode), 0o700,
+                                 f"{step.__name__} {directory}")
 
 
 if __name__ == "__main__":

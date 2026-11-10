@@ -19,6 +19,8 @@ from pathlib import Path, PurePosixPath
 
 
 PIN = ".zhenhe-pin.json"
+# Public starters the user is expected to edit; kept once they differ from the pin.
+USER_EDITED = {"voice_quick.md", "current_brief.md"}
 PRIVATE_ROOTS = {"style_profile.md", "content_plan.md", "_scraped_posts_draft.md", ".rd", "drafts"}
 
 
@@ -42,6 +44,8 @@ def extract_archive(payload: bytes, prefix: str, destination: Path) -> None:
     """Copy regular archive entries only, without trusting archive paths or links."""
     with tarfile.open(fileobj=io.BytesIO(payload), mode="r:") as archive:
         for entry in archive:
+            if "\\" in entry.name or ":" in entry.name:  # Windows separators and drives
+                raise ValueError(f"unsafe archive path: {entry.name}")
             parts = PurePosixPath(entry.name).parts
             base = PurePosixPath(prefix).parts
             if entry.isdir() and len(parts) < len(base) and base[:len(parts)] == parts:
@@ -52,6 +56,8 @@ def extract_archive(payload: bytes, prefix: str, destination: Path) -> None:
             if not relative:
                 continue
             path = destination.joinpath(*relative)
+            if not path.resolve().is_relative_to(destination.resolve()):
+                raise ValueError(f"unsafe archive path: {entry.name}")
             if entry.isdir():
                 path.mkdir(parents=True, exist_ok=True)
             elif entry.isfile():
@@ -152,7 +158,7 @@ def private_inventory(root: Path, pin: dict, tree: tuple[list[Path], list[Path]]
         if name == PIN:
             continue
         if (private_name(relative) or name not in public
-                or (name == "voice_quick.md" and digest(root / relative) != public[name])):
+                or (name in USER_EDITED and digest(root / relative) != public[name])):
             private_files.append(relative)
     private_dirs = [relative for relative in directories
                     if private_name(relative) or not any(
@@ -180,6 +186,13 @@ def copy_files(source: Path, destination: Path, tree: tuple[list[Path], list[Pat
     for relative, value in expected.items():
         if digest(source / relative) != value or digest(destination / relative) != value:
             raise ValueError(f"copied file hash mismatch: {relative}")
+
+
+def keep_modes(source: Path, staging: Path, directories: list[Path]) -> None:
+    """Carry directory permissions over, so a reinstall never widens private data."""
+    for relative in [Path("."), *directories]:
+        if (staging / relative).is_dir():
+            (staging / relative).chmod(stat.S_IMODE((source / relative).lstat().st_mode))
 
 
 def write_pin(root: Path, pin: dict) -> None:
@@ -234,9 +247,9 @@ def rollback(target: Path, dry_run: bool) -> None:
     previous_private = private_inventory(previous, previous_pin, previous_tree)
     old_private_files = {path.as_posix() for path in previous_private[1]}
     current_private_files = {path.as_posix() for path in current_private[1]}
-    if ("voice_quick.md" in old_private_files and "voice_quick.md" not in current_private_files
-            and (target / "voice_quick.md").is_file()):
-        current_private[1].append(Path("voice_quick.md"))
+    for name in USER_EDITED:
+        if name in old_private_files and name not in current_private_files and (target / name).is_file():
+            current_private[1].append(Path(name))
     print(f"Restore {previous} to {target}; preserve current as {target}.bak-<UTC timestamp>")
     if dry_run:
         return
@@ -252,6 +265,7 @@ def rollback(target: Path, dry_run: bool) -> None:
         for path in private:
             previous_pin["files"].pop(path, None)
         write_pin(staging, previous_pin)
+        keep_modes(target, staging, current_tree[0])
         safe_tree(staging)
         check_lock(staging)
         check_lock(previous)
@@ -265,6 +279,7 @@ def install(repo: Path, ref: str, target: Path, private: Path | None, dry_run: b
         raise ValueError("target exists but is unmanaged")
     source = None
     source_tree: tuple[list[Path], list[Path]] = ([], [])
+    tree = source_tree
     if exists:
         check_lock(target)
         tree = safe_tree(target)
@@ -304,7 +319,7 @@ def install(repo: Path, ref: str, target: Path, private: Path | None, dry_run: b
         if source is not None:
             if not exists:
                 for path in source_tree[1]:
-                    if path.as_posix() in public and path.as_posix() != "voice_quick.md":
+                    if path.as_posix() in public and path.as_posix() not in USER_EDITED:
                         raise ValueError(f"private import conflicts with public file: {path}")
             copy_files(source, staging, source_tree)
             private_files.update(path.as_posix() for path in source_tree[1])
@@ -313,6 +328,8 @@ def install(repo: Path, ref: str, target: Path, private: Path | None, dry_run: b
         pin = {"sha": sha, "ref": ref, "installed_at": datetime.now(timezone.utc).isoformat(),
                "files": public, "private_files": sorted(private_files)}
         write_pin(staging, pin)
+        if exists:
+            keep_modes(target, staging, tree[0])
         safe_tree(staging)
         check_lock(staging)
         if source is not None:
