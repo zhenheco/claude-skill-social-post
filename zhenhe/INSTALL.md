@@ -15,7 +15,7 @@ python3 -B zhenhe/tools/install_skill.py --repo "$PWD" \
   --ref origin/zhenhe/main --target "$SP_TARGET" --private-dir "$SP_PRIVATE"
 ```
 
-`--repo` 省略時使用目前目錄；`--ref` 可填 commit SHA 或 Git ref。安裝器從解析後 commit 的 Git archive 讀取 `social-post/` 及同一 commit 中可選的 `zhenhe/overlay/`，不讀取工作樹中未提交的內容。`--private-dir` 可省略；僅在 target 不存在的首次安裝時，從該目錄匯入檔案，來源目錄不建立、不刪改。重裝一律使用舊 target，不再讀匯入來源。
+`--repo` 省略時使用目前目錄；`--ref` 可填 commit SHA 或 Git ref。安裝器從解析後 commit 的 Git archive 讀取 `social-post/` 及同一 commit 中可選的 `zhenhe/overlay/`，不讀取工作樹中未提交的內容。POSIX 路徑段可含冒號，但以英文字母加冒號開頭的路徑段視為 Windows 磁碟代號並拒絕；反斜線與 UNC 路徑也會被拒絕。`--private-dir` 可省略；僅在 target 不存在的首次安裝時，從該目錄匯入檔案，來源目錄不建立、不刪改。首次匯入時 target 根目錄及匯入的子目錄沿用來源權限；重裝與退回則沿用目前 target 的目錄權限。重裝一律使用舊 target，不再讀匯入來源。
 
 `.zhenhe-pin.json` 記錄完整 SHA、原 ref、UTC 安裝時間，`files` 記錄 archive／overlay 的公開檔路徑與 SHA-256；`private_files` 只記錄安裝當時私人檔的相對路徑，不記錄內容。新產生的私人檔會在下次安裝時辨識並列入。為保護公開檔，首次匯入不得包含 `.zhenhe-pin.json`、`data/rule_registry.json`，也不能覆蓋公開檔（`voice_quick.md` 除外）。
 

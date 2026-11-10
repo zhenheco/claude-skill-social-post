@@ -8,6 +8,7 @@ import hashlib
 import io
 import json
 import os
+import re
 import shutil
 import stat
 import subprocess
@@ -44,9 +45,10 @@ def extract_archive(payload: bytes, prefix: str, destination: Path) -> None:
     """Copy regular archive entries only, without trusting archive paths or links."""
     with tarfile.open(fileobj=io.BytesIO(payload), mode="r:") as archive:
         for entry in archive:
-            if "\\" in entry.name or ":" in entry.name:  # Windows separators and drives
-                raise ValueError(f"unsafe archive path: {entry.name}")
             parts = PurePosixPath(entry.name).parts
+            if ("\\" in entry.name
+                    or any(re.match(r"^[A-Za-z]:", part) for part in parts)):
+                raise ValueError(f"unsafe archive path: {entry.name}")
             base = PurePosixPath(prefix).parts
             if entry.isdir() and len(parts) < len(base) and base[:len(parts)] == parts:
                 continue
@@ -189,7 +191,7 @@ def copy_files(source: Path, destination: Path, tree: tuple[list[Path], list[Pat
 
 
 def keep_modes(source: Path, staging: Path, directories: list[Path]) -> None:
-    """Carry directory permissions over, so a reinstall never widens private data."""
+    """Carry directory permissions over to avoid widening private data."""
     for relative in [Path("."), *directories]:
         if (staging / relative).is_dir():
             (staging / relative).chmod(stat.S_IMODE((source / relative).lstat().st_mode))
@@ -330,6 +332,8 @@ def install(repo: Path, ref: str, target: Path, private: Path | None, dry_run: b
         write_pin(staging, pin)
         if exists:
             keep_modes(target, staging, tree[0])
+        elif source is not None:
+            keep_modes(source, staging, source_tree[0])
         safe_tree(staging)
         check_lock(staging)
         if source is not None:

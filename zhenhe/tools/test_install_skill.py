@@ -179,6 +179,25 @@ class InstallSkillTests(unittest.TestCase):
         self.assert_success(self.run_installer(private=self.private))
         self.assertEqual((self.target / "voice_quick.md").read_text(), "imported voice")
 
+    def test_first_import_and_reinstall_keep_private_directory_modes(self):
+        previous = os.umask(0o022)
+        self.addCleanup(os.umask, previous)
+        (self.private / "data").mkdir(parents=True)
+        (self.private / "drafts").mkdir()
+        (self.private / "data/posts.jsonl").write_text("fixture data\n")
+        (self.private / "drafts/example.md").write_text("fixture draft\n")
+        for directory in (self.private, self.private / "data", self.private / "drafts"):
+            directory.chmod(0o700)
+
+        for phase in ("first import", "reinstall"):
+            self.assert_success(self.run_installer(private=self.private))
+            for relative in (Path("."), Path("data"), Path("drafts")):
+                with self.subTest(phase=phase, directory=relative):
+                    self.assertEqual(stat.S_IMODE((self.private / relative).stat().st_mode), 0o700)
+                    self.assertEqual(stat.S_IMODE((self.target / relative).stat().st_mode), 0o700)
+            self.assertEqual((self.target / "data/posts.jsonl").read_text(), "fixture data\n")
+            self.assertEqual((self.target / "drafts/example.md").read_text(), "fixture draft\n")
+
     def test_first_import_rejects_write_lock_without_creating_target(self):
         for lock_kind in ("directory", "file"):
             with self.subTest(lock_kind=lock_kind):
@@ -439,9 +458,18 @@ class InstallSkillTests(unittest.TestCase):
         self.assertEqual((self.target / "current_brief.md").read_text(), "new public direction\n")
         self.assertNotIn("current_brief.md", self.pin()["private_files"])
 
+    def test_archive_installs_posix_names_with_colons(self):
+        self.write("social-post/notes 10:30.md", "meeting notes\n")
+        self.write("social-post/notes:archive/10:30.md", "archived notes\n")
+        self.commit("colon names")
+        self.assert_success(self.run_installer())
+        self.assertEqual((self.target / "notes 10:30.md").read_text(), "meeting notes\n")
+        self.assertEqual((self.target / "notes:archive/10:30.md").read_text(), "archived notes\n")
+
     def test_archive_paths_with_windows_separators_or_drives_are_rejected(self):
         for name in ("social-post/..\\..\\evil", "social-post/D:evil", "social-post/\\escape",
-                     "social-post/a\\b"):
+                     "social-post/a\\b", "social-post/nested/z:escape",
+                     "social-post/C:/escape", "C:/social-post/escape", "//server/share/escape"):
             with self.subTest(name=name):
                 buffer = io.BytesIO()
                 with tarfile.open(fileobj=buffer, mode="w") as archive:
